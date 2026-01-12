@@ -23,6 +23,7 @@
 
 #include "raylib.h"
 #include "game.h"
+#include "System_RAII_Guards.h"
 
 
 //------------------------------------------------------------------------------------
@@ -31,63 +32,22 @@
 int main(void)
 {    
 
-    // TODO: Window and audio device lifetimes are managed manually.
-    // Not exception-safe and violates RAII. Introduce RAII guard objects for InitWindow / CloseWindow
-    // and InitAudioDevice / CloseAudioDevice.
+    WindowGuard window{ 1920, 1080, "SPACE INVADERS" };
 
-    // Initialization
-    //--------------------------------------------------------------------------------------
-    const int screenWidth = 1920;
-    const int screenHeight = 1080;
+    SetTargetFPS(60);
 
-    InitWindow(screenWidth, screenHeight, "SPACE INVADERS");
-
-    SetTargetFPS(60);               // Set our game to run at 60 frames-per-second
-
-    Game game = { State::STARTSCREEN };
-    Resources resources;
-
-
-    
+    Game game{ State::STARTSCREEN };
+    game.resources = Resources{};
     //--------------------------------------------------------------------------------------
 
-    InitAudioDevice();
-
-    auto sound = LoadSound("./hitHurt.ogg"); //TODO: sound is loaded but never unloaded, causes resource leaks, can be fixed with RAII 
-    
-
-
-
-    // Main game loop
-    while (!WindowShouldClose())    // Detect window close button or ESC key
-    {
-        // Update
-
+    while (!WindowShouldClose()) {
         game.Update();
-      
 
-        // Draw
-        //----------------------------------------------------------------------------------
         BeginDrawing();
-
         ClearBackground(BLACK);
-
-       
-
         game.Render();
-
         EndDrawing();
-        //----------------------------------------------------------------------------------
     }
-
-    CloseAudioDevice();
-    
-    // De-Initialization
-    //--------------------------------------------------------------------------------------
-    CloseWindow();        // Close window and OpenGL context
-    //--------------------------------------------------------------------------------------
-
-    std::string filename = "level.txt";  
 
     return 0;
 }
