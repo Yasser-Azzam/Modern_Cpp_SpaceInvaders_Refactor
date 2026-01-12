@@ -168,6 +168,7 @@
     <ClCompile Include="Source\Resources.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="RAII_Texture_Wrapper.h" />
     <ClInclude Include="Source\game.h" />
     <ClInclude Include="Source\Resources.h" />
   </ItemGroup>
