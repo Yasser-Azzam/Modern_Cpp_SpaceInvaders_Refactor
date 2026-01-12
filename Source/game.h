@@ -126,6 +126,10 @@ struct Background
 
 struct Game
 {
+	// TODO: game handles too many responsibilties at once.
+	// It handles state management, input, rendering, collision detection, entity lifetime, UI text input, and file I/O.
+	// split Game into focused subsystems (state machine, collision system, leaderboard manager, entity manager)?.
+
 	// Gamestate
 	State gameState = {};
 
@@ -172,11 +176,12 @@ struct Game
 
 
 	// Entity Storage and Resources
-	Resources resources;
+	Resources resources;						//TODO: unclear lifetime and ownership, should be constructed in a valid state and managed using RAII
 
-	Player player;
+	Player player;						//TODO: like "Resources resources", player should be constructed in a valid state using a constructor
 
-	std::vector<Projectile> Projectiles;
+	std::vector<Projectile> Projectiles;		//TODO: Entity lifetime is controlled via 'active' flags and manual erasing.
+												//Define clear ownership and use erase-remove or std::erase_if.
 
 	std::vector<Wall> Walls;
 
@@ -196,6 +201,7 @@ struct Game
 
 
 	//TEXTBOX ENTER
+	//TODO: C-style char array, change it to std::string since it need to be modifiable and not just read(no std::String_View)
 	char name[9 + 1] = "\0";      //One extra space required for null terminator char '\0'
 	int letterCount = 0;
 

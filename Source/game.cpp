@@ -27,8 +27,11 @@ bool pointInCircle(Vector2 circlePos, float radius, Vector2 point) // Uses pytha
 		return false;
 	}
 }
+//TODO:^^those two functions are free functions used for collision detection,
+//I dont see any issues with them but I should keep an eye on them just in case
 
 
+//TODO: "Game::Start()" does 2-phase initialization, should be a constructor instead.
 void Game::Start()
 {
 	// creating walls 
@@ -67,6 +70,10 @@ void Game::Start()
 
 }
 
+//I see no issue here, with the "end", "continue" and "launch" functions.
+// they seem to have been made a for a single and they only do that
+//in the case of "End()" you could argue its doing multiple things(clear the screen, check if the score is a new high score and change game state)
+//but I can't think of a better way that I would find more readable/optimal(for now at least) 
 void Game::End()
 {
 	//SAVE SCORE AND UPDATE SCOREBOARD
@@ -89,6 +96,9 @@ void Game::Launch()
 	resources.Load();
 }
 
+// TODO: Game::Update() is really long and deeply nested.
+// It mixes input handling, physics, collision detection, spawning, scoring, and cleanup.
+// Extract responsibilities into smaller functions or systems and reduce nesting by using algorithms if possible.
 void Game::Update()
 {
 	switch (gameState)
@@ -156,6 +166,8 @@ void Game::Update()
 		}
 
 		//CHECK ALL COLLISONS HERE
+		//TODO: extract collision detection into a proper collision system to reduce "Update()" responsibilities
+		// (law of demeter, "Update()" should only update)
 		for (int i = 0; i < Projectiles.size(); i++)
 		{
 			if (Projectiles[i].type == EntityType::PLAYER_PROJECTILE)
@@ -234,6 +246,7 @@ void Game::Update()
 		}
 
 		// REMOVE INACTIVE/DEAD ENITITIES
+		// TODO: Erasing elements from vectors while iterating via indices, use std::erase_if instead.
 		for (int i = 0; i < Projectiles.size(); i++)
 		{
 			if (Projectiles[i].active == false)
@@ -346,6 +359,8 @@ void Game::Update()
 }
 
 
+// TODO: Rendering logic depends directly on Raylib types and game state internals.
+// Introduce a rendering layer that consumes read-only state.
 void Game::Render()
 {
 	switch (gameState)
@@ -567,7 +582,7 @@ void Game::SaveLeaderboard()
 	// CLOSE FILE
 }
 
-
+// TODO: Collision detection uses floating-point equality(Core guidelines says to avoid that)
 bool Game::CheckCollision(Vector2 circlePos, float circleRadius, Vector2 lineStart, Vector2 lineEnd)
 {
 	// our objective is to calculate the distance between the closest point on the line to the centre of the circle, 
@@ -633,6 +648,7 @@ bool Game::CheckCollision(Vector2 circlePos, float circleRadius, Vector2 lineSta
 
 }
 
+//TODO: this is 2-phase init, replace with constructor
 void Player::Initialize() 
 {
 	
@@ -704,7 +720,6 @@ void Player::Render(Texture2D texture)
 		0,
 		WHITE);
 }
-
 
 
 void Projectile::Update()
@@ -844,6 +859,7 @@ void Star::Render()
 }
 
 
+// TODO: Background relies on two-phase initialization. Replace with a constructor that initializes stars immediately.
 void Background::Initialize(int starAmount)
 {
 	for (int i = 0; i < starAmount; i++)

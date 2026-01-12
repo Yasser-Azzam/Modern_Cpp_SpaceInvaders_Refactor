@@ -3,6 +3,7 @@
 #include <string>
 #include <fstream>
 
+//TODO: unused code file, delete it
 
 struct Entity
 {

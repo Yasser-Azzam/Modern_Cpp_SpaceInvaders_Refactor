@@ -3,7 +3,7 @@
 #include <vector> 
 #include <string>
 #include "level.h"
-
+//TODO: unused code file, delete it
 void LoadLevelFromFile(const std::string& filename) 
 {
 	std::ifstream file(filename); 

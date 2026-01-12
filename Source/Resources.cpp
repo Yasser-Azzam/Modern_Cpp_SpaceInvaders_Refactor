@@ -1,6 +1,8 @@
 #include "Resources.h"
 #include <iostream>;
 
+
+//TODO: Two phase initialization rather than a proper constructor. Replace with a proper constructor.
 void Resources::Load()
 {
 	std::cout << "Yay"; // yes

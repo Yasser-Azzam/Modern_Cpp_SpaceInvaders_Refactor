@@ -30,6 +30,11 @@
 //------------------------------------------------------------------------------------
 int main(void)
 {    
+
+    // TODO: Window and audio device lifetimes are managed manually.
+    // Not exception-safe and violates RAII. Introduce RAII guard objects for InitWindow / CloseWindow
+    // and InitAudioDevice / CloseAudioDevice.
+
     // Initialization
     //--------------------------------------------------------------------------------------
     const int screenWidth = 1920;
@@ -49,7 +54,7 @@ int main(void)
 
     InitAudioDevice();
 
-    auto sound = LoadSound("./hitHurt.ogg");
+    auto sound = LoadSound("./hitHurt.ogg"); //TODO: sound is loaded but never unloaded, causes resource leaks, can be fixed with RAII 
     
 
 
