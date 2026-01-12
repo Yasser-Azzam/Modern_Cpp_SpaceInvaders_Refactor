@@ -2,14 +2,9 @@
 #include <iostream>;
 
 
-//TODO: Two phase initialization rather than a proper constructor. Replace with a proper constructor.
-void Resources::Load()
+Resources::Resources()   : alienTexture("./Assets/Alien.png"), barrierTexture("./Assets/Barrier.png"), laserTexture("./Assets/Laser.png")
 {
-	std::cout << "Yay"; // yes
-	alienTexture = LoadTexture("./Assets/Alien.png");
-	barrierTexture = LoadTexture("./Assets/Barrier.png");
-	shipTextures.push_back(LoadTexture("./Assets/Ship1.png"));
-	shipTextures.push_back(LoadTexture("./Assets/Ship2.png"));
-	shipTextures.push_back(LoadTexture("./Assets/Ship3.png"));
-	laserTexture = LoadTexture("./Assets/Laser.png");
+    shipTextures.emplace_back("./Assets/Ship1.png");
+    shipTextures.emplace_back("./Assets/Ship2.png");
+    shipTextures.emplace_back("./Assets/Ship3.png");
 }

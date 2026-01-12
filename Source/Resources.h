@@ -1,12 +1,12 @@
 #pragma once
-#include <vector>
-
+#include "vector"
+#include "RAII_Texture_Wrapper.h"
 
 struct Resources {
     Resources();
 
-    std::vector<TextureHandle> shipTextures;
-    TextureHandle alienTexture;
-    TextureHandle barrierTexture;
-    TextureHandle laserTexture;
+    std::vector<TextureWrapper> shipTextures;
+    TextureWrapper alienTexture;
+    TextureWrapper barrierTexture;
+    TextureWrapper laserTexture;
 };

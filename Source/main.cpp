@@ -46,8 +46,7 @@ int main(void)
 
     Game game = { State::STARTSCREEN };
     Resources resources;
-    game.resources = resources;
-    game.Launch();
+
 
     
     //--------------------------------------------------------------------------------------
