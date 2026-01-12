@@ -9,7 +9,6 @@ struct Resources
 	// and make Resources follow the Rule of 0 since no special constructor/copy/move/destructor needed.
 
 	void Load();
-	//void Unload();
 
 	std::vector<Texture2D> shipTextures;
 	Texture2D alienTexture;
