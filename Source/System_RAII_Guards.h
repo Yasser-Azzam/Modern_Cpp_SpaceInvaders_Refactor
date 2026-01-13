@@ -4,11 +4,13 @@
 
 class WindowGuard {
 public:
-    WindowGuard(int width, int height, const char* title) {
+    WindowGuard(int width, int height, const char* title) 
+    {
         InitWindow(width, height, title);
     }
 
-    ~WindowGuard() {
+    ~WindowGuard() noexcept
+    {
         CloseWindow();
     }
 
