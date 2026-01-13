@@ -31,43 +31,28 @@ bool pointInCircle(Vector2 circlePos, float radius, Vector2 point) // Uses pytha
 //I dont see any issues with them but I should keep an eye on them just in case
 
 
-//TODO: "Game::Start()" does 2-phase initialization, should be a constructor instead.
-void Game::Start()
+Game::Game(State initialState)
+	: gameState(initialState)
+	, score(0)
+	, background(600) // ? constructed here
 {
-	// creating walls 
-	float window_width = (float)GetScreenWidth(); 
-	float window_height = (float)GetScreenHeight(); 
-	float wall_distance = window_width / (wallCount + 1); 
+	float window_width = static_cast<float>(GetScreenWidth());
+	float window_height = static_cast<float>(GetScreenHeight());
+
+	float wall_distance = window_width / (wallCount + 1);
+
 	for (int i = 0; i < wallCount; i++)
 	{
-		Wall newWalls;
-		newWalls.position.y = window_height - 250; 
-		newWalls.position.x = wall_distance * (i + 1); 
-
-		Walls.push_back(newWalls); 
-
+		Wall newWall;
+		newWall.position.y = window_height - 250;
+		newWall.position.x = wall_distance * (i + 1);
+		newWall.active = true;
+		Walls.push_back(newWall);
 	}
 
+	player = Player{};
 
-	//creating player
-	Player newPlayer;
-	player = newPlayer;
-	player.Initialize();
-
-	//creating aliens
 	SpawnAliens();
-	
-
-	//creating background
-	Background newBackground;
-	newBackground.Initialize(600);
-	background = newBackground;
-
-	//reset score
-	score = 0;
-
-	gameState = State::GAMEPLAY;
-
 }
 
 //I see no issue here, with the "end", "continue" and "launch" functions.
@@ -101,9 +86,7 @@ void Game::Update()
 		//Code 
 		if (IsKeyReleased(KEY_SPACE))
 		{
-			Start();
-
-
+			*this = Game{ State::GAMEPLAY };
 		}
 
 		break;
@@ -635,14 +618,9 @@ bool Game::CheckCollision(Vector2 circlePos, float circleRadius, Vector2 lineSta
 
 }
 
-//TODO: this is 2-phase init, replace with constructor
-void Player::Initialize() 
+Player::Player()
 {
-	
-	float window_width = (float)GetScreenWidth();
-	x_pos = window_width / 2;
-	std::cout<< "Find Player -X:" << GetScreenWidth() / 2 << "Find Player -Y" << GetScreenHeight() - player_base_height << std::endl;
-
+	x_pos = static_cast<float>(GetScreenWidth()) / 2.0f;
 }
 
 void Player::Update() 
@@ -843,23 +821,19 @@ void Star::Render()
 }
 
 
-// TODO: Background relies on two-phase initialization. Replace with a constructor that initializes stars immediately.
-void Background::Initialize(int starAmount)
+Background::Background(int starAmount)
 {
+	Stars.reserve(starAmount);
+
 	for (int i = 0; i < starAmount; i++)
 	{
 		Star newStar;
-
 		newStar.initPosition.x = GetRandomValue(-150, GetScreenWidth() + 150);
 		newStar.initPosition.y = GetRandomValue(0, GetScreenHeight());
-		
-		//random color?
 		newStar.color = SKYBLUE;
-
-		newStar.size = GetRandomValue(1, 4) / 2;
+		newStar.size = GetRandomValue(1, 4) / 2.0f;
 
 		Stars.push_back(newStar);
-
 	}
 }
 

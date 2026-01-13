@@ -29,121 +29,113 @@ struct PlayerData
 struct Player
 {
 public:
+	float x_pos;
+	float speed = 7.0f;
+	float player_base_height = 70.0f;
+	float radius = 50.0f;
 
-	float x_pos = 0;
-	float speed = 7;
-	float player_base_height = 70.0f;  
-	float radius = 50;
 	int lives = 3;
 	int direction = 0;
 	int activeTexture = 0;
-	float timer = 0;
+	float timer = 0.0f;
 
 	EntityType type = EntityType::PLAYER;
 
-	void Initialize();
-	void Render(Texture2D texture);
+	Player(); 
+
 	void Update();
-	
+	void Render(Texture2D texture);
+
 };
 
 
 struct Projectile
 {
 public: 
-	// INITIALIZE PROJECTILE WHILE DEFINING IF ITS PLAYER OR ENEMY 
-	Vector2 position = {0,0};
-	int speed = 15; 
-	bool active = true;  
-	EntityType type = {};
+public:
+	Vector2 position{ 0.0f, 0.0f };
+	int speed = 15;
+	bool active = true;
 
-	// LINE WILL UPDATE WITH POSITION FOR CALCULATIONS
-	Vector2 lineStart = { 0, 0 };
-	Vector2 lineEnd = { 0, 0 };
+	EntityType type{};
+
+	Vector2 lineStart{ 0.0f, 0.0f };
+	Vector2 lineEnd{ 0.0f, 0.0f };
 
 	void Update();
-
 	void Render(Texture2D texture);
 };
 
 struct Wall 
 {
 public: 
-	Vector2 position; 
-	Rectangle rec; 
-	bool active; 
-	Color color; 
+	Vector2 position{ 0.0f, 0.0f };
+	Rectangle rec{};
+	bool active = true;
+
+	Color color = WHITE;
 	int health = 50;
 	int radius = 60;
 
-
-	void Render(Texture2D texture); 
-	void Update(); 
+	void Update();
+	void Render(Texture2D texture);
 };
 
 struct Alien
 {
 public:
 	
-	Color color = WHITE; 
-	Vector2 position = {0, 0};
-	int x = 0; 
-	int y = 0; 
-	float radius = 30;
-	bool active = true;  
-	bool moveRight = true; 
-	
-	EntityType type = EntityType::ENEMY; 
+	Color color = WHITE;
+	Vector2 position{ 0.0f, 0.0f };
 
-	int speed = 2; 
-		 
-	void Update(); 
-	void Render(Texture2D texture); 
+	float radius = 30.0f;
+	bool active = true;
+	bool moveRight = true;
+
+	EntityType type = EntityType::ENEMY;
+	int speed = 2;
+
+	void Update();
+	void Render(Texture2D texture);
 };
 
 
 struct Star
 {
-	Vector2 initPosition = { 0, 0 };
-	Vector2 position = { 0, 0 };
+	Vector2 initPosition{ 0.0f, 0.0f };
+	Vector2 position{ 0.0f, 0.0f };
+
 	Color color = GRAY;
-	float size = 0;
+	float size = 0.0f;
+
 	void Update(float starOffset);
 	void Render();
 };
 
 struct Background
 {
-	
-
+public:
 	std::vector<Star> Stars;
 
-	void Initialize(int starAmount);
+	explicit Background(int starAmount); // replaces Initialize()
+
 	void Update(float offset);
 	void Render();
-
 };
 
 struct Game
 {
-	// TODO: game handles too many responsibilties at once.
-	// It handles state management, input, rendering, collision detection, entity lifetime, UI text input, and file I/O.
-	// split Game into focused subsystems (state machine, collision system, leaderboard manager, entity manager)?.
+public:
+	// NOTE:
+	// Game still has too many responsibilities.
+	// This is intentional for now — will be addressed in later steps.
 
-	// Gamestate
-	State gameState = {};
+	State gameState;
 
-	// Score
-	int score;
-
-	// for later, make a file where you can adjust the number of walls (config file) 
+	int score = 0;
 	int wallCount = 5;
 
-	//Aliens shooting
-	float shootTimer = 0;
-
-	//Aliens stuff? (idk cause liv wrote this)
-	Rectangle rec = { 0, 0 ,0 ,0 }; 
+	float shootTimer = 0.0f;
 
 	int formationWidth = 8;
 	int formationHeight = 5;
@@ -152,61 +144,53 @@ struct Game
 	int formationY = 50;
 
 	bool newHighScore = false;
-	
 
-	void Start();
-	void End();
+	Resources resources;
+	Player player;
 
-	void Continue();
+	std::vector<Projectile> Projectiles;
+	std::vector<Wall> Walls;
+	std::vector<Alien> Aliens;
+
+	std::vector<PlayerData> Leaderboard{
+		{"Player 1", 500},
+		{"Player 2", 400},
+		{"Player 3", 300},
+		{"Player 4", 200},
+		{"Player 5", 100}
+	};
+
+	Background background;
+
+	Vector2 playerPos{};
+	Vector2 cornerPos{};
+	float offset = 0.0f;
+
+	// UI input (still legacy — will refactor later)
+	char name[10] = "\0";
+	int letterCount = 0;
+
+	Rectangle textBox{ 600, 500, 225, 50 };
+	bool mouseOnText = false;
+	int framesCounter = 0;
+
+	explicit Game(State initialState); // replaces Start()
 
 	void Update();
 	void Render();
 
+	void End();
+	void Continue();
+
 	void SpawnAliens();
 
-	bool CheckCollision(Vector2 circlePos, float circleRadius, Vector2 lineTop, Vector2 lineBottom);
+	bool CheckCollision(Vector2 circlePos, float circleRadius,
+		Vector2 lineStart, Vector2 lineEnd);
 
 	bool CheckNewHighScore();
-
 	void InsertNewHighScore(std::string name);
 
 	void LoadLeaderboard();
 	void SaveLeaderboard();
-
-
-	// Entity Storage and Resources
-	Resources resources;						//TODO: unclear lifetime and ownership, should be constructed in a valid state and managed using RAII
-
-	Player player;						//TODO: like "Resources resources", player should be constructed in a valid state using a constructor
-
-	std::vector<Projectile> Projectiles;		//TODO: Entity lifetime is controlled via 'active' flags and manual erasing.
-												//Define clear ownership and use erase-remove or std::erase_if.
-
-	std::vector<Wall> Walls;
-
-	std::vector<Alien> Aliens;
-
-	std::vector<PlayerData> Leaderboard = { {"Player 1", 500}, {"Player 2", 400}, {"Player 3", 300}, {"Player 4", 200}, {"Player 5", 100} };
-	
-	Background background;
-
-
-
-	Vector2 playerPos;
-	Vector2 alienPos; 
-	Vector2 cornerPos;
-	float offset;
-
-
-
-	//TEXTBOX ENTER
-	//TODO: C-style char array, change it to std::string since it need to be modifiable and not just read(no std::String_View)
-	char name[9 + 1] = "\0";      //One extra space required for null terminator char '\0'
-	int letterCount = 0;
-
-	Rectangle textBox = { 600, 500, 225, 50 };
-	bool mouseOnText = false;
-
-	int framesCounter = 0;
 
 };
