@@ -1,4 +1,4 @@
-#include "game.h"
+﻿#include "game.h"
 #include <iostream>
 #include <vector>
 #include <chrono>
@@ -34,7 +34,7 @@ bool pointInCircle(Vector2 circlePos, float radius, Vector2 point) // Uses pytha
 Game::Game(State initialState)
 	: gameState(initialState)
 	, score(0)
-	, background(600) // ? constructed here
+	, background(600) // ✅ constructed here
 {
 	float window_width = static_cast<float>(GetScreenWidth());
 	float window_height = static_cast<float>(GetScreenHeight());
@@ -101,11 +101,11 @@ void Game::Update()
 		player.Update();
 		
 		//Update Aliens and Check if they are past player
-		for (int i = 0; i < Aliens.size(); i++)
+		for (auto& alien : Aliens)
 		{
-			Aliens[i].Update(); 
+			alien.Update();
 
-			if (Aliens[i].position.y > GetScreenHeight() - player.player_base_height)
+			if (alien.position.y > GetScreenHeight() - player.player_base_height)
 			{
 				End();
 			}
@@ -132,60 +132,45 @@ void Game::Update()
 
 
 		//UPDATE PROJECTILE
-		for (int i = 0; i < Projectiles.size(); i++)
-		{
-			Projectiles[i].Update();
-		}
-		//UPDATE PROJECTILE
-		for (int i = 0; i < Walls.size(); i++)
-		{
-			Walls[i].Update();
-		}
+		for (auto& projectile : Projectiles)
+			projectile.Update();
+
+		for (auto& wall : Walls)
+			wall.Update();
 
 		//CHECK ALL COLLISONS HERE
 		//TODO: extract collision detection into a proper collision system to reduce "Update()" responsibilities
 		// (law of demeter, "Update()" should only update)
-		for (int i = 0; i < Projectiles.size(); i++)
+		for (const auto& projectile : Projectiles)
 		{
-			if (Projectiles[i].type == EntityType::PLAYER_PROJECTILE)
+			if (projectile.type == EntityType::PLAYER_PROJECTILE)
 			{
-				for (int a = 0; a < Aliens.size(); a++)
+				for (auto& alien : Aliens)
 				{
-					if (CheckCollision(Aliens[a].position, Aliens[a].radius, Projectiles[i].lineStart, Projectiles[i].lineEnd))
+					if (CheckCollision(alien.position, alien.radius, projectile.lineStart, projectile.lineEnd))
 					{
-						// Kill!
-						std::cout << "Hit! \n";
-						// Set them as inactive, will be killed later
-						Projectiles[i].active = false;
-						Aliens[a].active = false;
+						alien.alive = false;
 						score += 100;
 					}
 				}
 			}
 
-			//ENEMY PROJECTILES HERE
-			for (int i = 0; i < Projectiles.size(); i++)
+			if (projectile.type == EntityType::ENEMY_PROJECTILE)
 			{
-				if (Projectiles[i].type == EntityType::ENEMY_PROJECTILE)
+				if (CheckCollision({ player.x_pos, GetScreenHeight() - player.player_base_height }, player.radius, projectile.lineStart, projectile.lineEnd))
 				{
-					if (CheckCollision({player.x_pos, GetScreenHeight() - player.player_base_height }, player.radius, Projectiles[i].lineStart, Projectiles[i].lineEnd))
-					{
-						std::cout << "dead!\n"; 
-						Projectiles[i].active = false; 
-						player.lives -= 1; 
-					}
+					std::cout << "dead!\n";
+					player.lives -= 1;
 				}
 			}
 
-
 			for (int b = 0; b < Walls.size(); b++)
 			{
-				if (CheckCollision(Walls[b].position, Walls[b].radius, Projectiles[i].lineStart, Projectiles[i].lineEnd))
+				if (CheckCollision(Walls[b].position, Walls[b].radius, projectile.lineStart, projectile.lineEnd))
 				{
 					// Kill!
 					std::cout << "Hit! \n";
 					// Set them as inactive, will be killed later
-					Projectiles[i].active = false;
 					Walls[b].health -= 1;
 				}
 			}
@@ -223,25 +208,17 @@ void Game::Update()
 		}
 
 		// REMOVE INACTIVE/DEAD ENITITIES
-		// TODO: Erasing elements from vectors while iterating via indices, use std::erase_if instead.
-		for (int i = 0; i < Projectiles.size(); i++)
-		{
-			if (Projectiles[i].active == false)
+		std::erase_if(Projectiles, [](const Projectile& p)
 			{
-				Projectiles.erase(Projectiles.begin() + i);
-				// Prevent the loop from skipping an instance because of index changes, since all insances after
-				// the killed objects are moved down in index. This is the same for all loops with similar function
-				i--;
-			}
-		}
-		for (int i = 0; i < Aliens.size(); i++)
-		{
-			if (Aliens[i].active == false)
+				return p.position.y < 0 || p.position.y > GetScreenHeight();
+			});
+
+
+		std::erase_if(Aliens, [](const Alien& a)
 			{
-				Aliens.erase(Aliens.begin() + i);
-				i--;
-			}
-		}
+				return !a.alive;
+			});
+
 		for (int i = 0; i < Walls.size(); i++)
 		{
 			if (Walls[i].active == false)
@@ -472,7 +449,6 @@ void Game::SpawnAliens()
 	for (int row = 0; row < formationHeight; row++) {
 		for (int col = 0; col < formationWidth; col++) {
 			Alien newAlien = Alien();
-			newAlien.active = true;
 			newAlien.position.x = formationX + 450 + (col * alienSpacing);
 			newAlien.position.y = formationY + (row * alienSpacing);
 			Aliens.push_back(newAlien);
@@ -697,11 +673,6 @@ void Projectile::Update()
 
 	lineStart.x = position.x;
 	lineEnd.x   = position.x;
-
-	if (position.y < 0 || position.y > 1500)
-	{
-		active = false;
-	}
 }
 
 void Projectile::Render(Texture2D texture)

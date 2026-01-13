@@ -53,14 +53,12 @@ struct Projectile
 {
 public: 
 public:
-	Vector2 position{ 0.0f, 0.0f };
+	Vector2 position{};
 	int speed = 15;
-	bool active = true;
-
 	EntityType type{};
 
-	Vector2 lineStart{ 0.0f, 0.0f };
-	Vector2 lineEnd{ 0.0f, 0.0f };
+	Vector2 lineStart{};
+	Vector2 lineEnd{};
 
 	void Update();
 	void Render(Texture2D texture);
@@ -89,8 +87,9 @@ public:
 	Vector2 position{ 0.0f, 0.0f };
 
 	float radius = 30.0f;
-	bool active = true;
 	bool moveRight = true;
+	bool alive = true;
+
 
 	EntityType type = EntityType::ENEMY;
 	int speed = 2;
