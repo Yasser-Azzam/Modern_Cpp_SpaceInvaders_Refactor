@@ -101,15 +101,7 @@ void Game::Update()
 		player.Update();
 		
 		//Update Aliens and Check if they are past player
-		for (auto& alien : Aliens)
-		{
-			alien.Update();
-
-			if (alien.position.y > GetScreenHeight() - player.player_base_height)
-			{
-				End();
-			}
-		}
+		
 
 		//End game if player dies
 		if (player.lives < 1)
@@ -131,50 +123,24 @@ void Game::Update()
 		background.Update(offset / 15);
 
 
-		//UPDATE PROJECTILE
-		for (auto& projectile : Projectiles)
-			projectile.Update();
+		for (auto& proj : Projectiles) 
+			proj.Update();
 
-		for (auto& wall : Walls)
+		for (auto& wall : Walls) 
 			wall.Update();
 
-		//CHECK ALL COLLISONS HERE
-		//TODO: extract collision detection into a proper collision system to reduce "Update()" responsibilities
-		// (law of demeter, "Update()" should only update)
-		for (const auto& projectile : Projectiles)
+		for (auto& alien : Aliens)
 		{
-			if (projectile.type == EntityType::PLAYER_PROJECTILE)
-			{
-				for (auto& alien : Aliens)
-				{
-					if (CheckCollision(alien.position, alien.radius, projectile.lineStart, projectile.lineEnd))
-					{
-						alien.alive = false;
-						score += 100;
-					}
-				}
-			}
+			alien.Update();
 
-			if (projectile.type == EntityType::ENEMY_PROJECTILE)
+			if (alien.position.y > GetScreenHeight() - player.player_base_height)
 			{
-				if (CheckCollision({ player.x_pos, GetScreenHeight() - player.player_base_height }, player.radius, projectile.lineStart, projectile.lineEnd))
-				{
-					std::cout << "dead!\n";
-					player.lives -= 1;
-				}
-			}
-
-			for (int b = 0; b < Walls.size(); b++)
-			{
-				if (CheckCollision(Walls[b].position, Walls[b].radius, projectile.lineStart, projectile.lineEnd))
-				{
-					// Kill!
-					std::cout << "Hit! \n";
-					// Set them as inactive, will be killed later
-					Walls[b].health -= 1;
-				}
+				End();
 			}
 		}
+
+		// Handle collisions & remove dead objects inline
+		HandleCollisions();
 
 		//MAKE PROJECTILE
 		if (IsKeyPressed(KEY_SPACE))
@@ -206,30 +172,6 @@ void Game::Update()
 			Projectiles.push_back(newProjectile);
 			shootTimer = 0;
 		}
-
-		// REMOVE INACTIVE/DEAD ENITITIES
-		std::erase_if(Projectiles, [](const Projectile& p)
-			{
-				return p.position.y < 0 || p.position.y > GetScreenHeight();
-			});
-
-
-		std::erase_if(Aliens, [](const Alien& a)
-			{
-				return !a.alive;
-			});
-
-		for (int i = 0; i < Walls.size(); i++)
-		{
-			if (Walls[i].active == false)
-			{
-				Walls.erase(Walls.begin() + i);
-				i--;
-			}
-		}
-
-			
-		
 
 	break;
 	case State::ENDSCREEN:
@@ -357,11 +299,6 @@ void Game::Render()
 		{
 			Aliens[i].Render(resources.alienTexture.get());
 		}
-
-
-
-
-
 
 		break;
 	case State::ENDSCREEN:
@@ -592,6 +529,64 @@ bool Game::CheckCollision(Vector2 circlePos, float circleRadius, Vector2 lineSta
 		return false;
 	}
 
+}
+
+void Game::HandleCollisions()
+{
+	HandlePlayerProjectiles();
+	HandleEnemyProjectiles();
+}
+
+void Game::HandlePlayerProjectiles()
+{
+	for (int p = 0; p < Projectiles.size(); ++p)
+	{
+		Projectile& proj = Projectiles[p];
+
+		if (proj.type != EntityType::PLAYER_PROJECTILE) 
+			continue;
+
+		// Aliens hit
+		auto it = std::find_if(Aliens.begin(), Aliens.end(),
+			[&](Alien& a) { return CheckCollision(a.position, a.radius, proj.lineStart, proj.lineEnd); });
+
+		if (it != Aliens.end())
+		{
+			Aliens.erase(it);
+			Projectiles.erase(Projectiles.begin() + p);
+			p--;
+			continue;
+		}
+
+		// Walls hit
+		auto wit = std::find_if(Walls.begin(), Walls.end(),
+			[&](Wall& w) { return CheckCollision(w.position, w.radius, proj.lineStart, proj.lineEnd); });
+
+		if (wit != Walls.end())
+		{
+			wit->health--;
+			if (wit->health <= 0) Walls.erase(wit);
+			Projectiles.erase(Projectiles.begin() + p);
+			p--;
+		}
+	}
+}
+
+void Game::HandleEnemyProjectiles()
+{
+	for (int p = 0; p < Projectiles.size(); ++p)
+	{
+		Projectile& proj = Projectiles[p];
+		if (proj.type != EntityType::ENEMY_PROJECTILE) continue;
+
+		if (CheckCollision({ player.x_pos, GetScreenHeight() - player.player_base_height },
+			player.radius, proj.lineStart, proj.lineEnd))
+		{
+			player.lives--;
+			Projectiles.erase(Projectiles.begin() + p);
+			p--;
+		}
+	}
 }
 
 Player::Player()

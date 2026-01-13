@@ -186,6 +186,10 @@ public:
 	bool CheckCollision(Vector2 circlePos, float circleRadius,
 		Vector2 lineStart, Vector2 lineEnd);
 
+	void HandleCollisions();
+	void HandlePlayerProjectiles();
+	void HandleEnemyProjectiles();
+
 	bool CheckNewHighScore();
 	void InsertNewHighScore(std::string name);
 
