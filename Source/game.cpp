@@ -80,178 +80,32 @@ void Game::Continue()
 // Extract responsibilities into smaller functions or systems and reduce nesting by using algorithms if possible.
 void Game::Update()
 {
-	switch (gameState)
-	{
-	case State::STARTSCREEN:
-		//Code 
-		if (IsKeyReleased(KEY_SPACE))
-		{
-			*this = Game{ State::GAMEPLAY };
-		}
+	HandleInput();
 
-		break;
-	case State::GAMEPLAY:
-		//Code
-		if (IsKeyReleased(KEY_Q))
-		{
+	if (gameState != State::GAMEPLAY) return;
+
+	player.Update();
+
+	for (auto& alien : Aliens) {
+		alien.Update();
+		if (alien.position.y > GetScreenHeight() - player.player_base_height)
 			End();
-		}
-
-		//Update Player
-		player.Update();
-		
-		//Update Aliens and Check if they are past player
-		
-
-		//End game if player dies
-		if (player.lives < 1)
-		{
-			End();
-		}
-
-		//Spawn new aliens if aliens run out
-		if (Aliens.size() < 1)
-		{
-			SpawnAliens();
-		}
-
-
-		// Update background with offset
-		playerPos = { player.x_pos, (float)player.player_base_height };
-		cornerPos = { 0, (float)player.player_base_height };
-		offset = lineLength(playerPos, cornerPos) * -1;
-		background.Update(offset / 15);
-
-
-		for (auto& proj : Projectiles) 
-			proj.Update();
-
-		for (auto& wall : Walls) 
-			wall.Update();
-
-		for (auto& alien : Aliens)
-		{
-			alien.Update();
-
-			if (alien.position.y > GetScreenHeight() - player.player_base_height)
-			{
-				End();
-			}
-		}
-
-		// Handle collisions & remove dead objects inline
-		HandleCollisions();
-
-		//MAKE PROJECTILE
-		if (IsKeyPressed(KEY_SPACE))
-		{
-			float window_height = (float)GetScreenHeight();
-			Projectile newProjectile;
-			newProjectile.position.x = player.x_pos;
-			newProjectile.position.y = window_height - 130;
-			newProjectile.type = EntityType::PLAYER_PROJECTILE;
-			Projectiles.push_back(newProjectile);
-		}
-
-		//Aliens Shooting
-		shootTimer += 1;
-		if (shootTimer > 59) //once per second
-		{
-			int randomAlienIndex = 0;
-
-			if (Aliens.size() > 1)
-			{
-				randomAlienIndex = rand() % Aliens.size();
-			}
-
-			Projectile newProjectile;
-			newProjectile.position = Aliens[randomAlienIndex].position;
-			newProjectile.position.y += 40;
-			newProjectile.speed = -15;
-			newProjectile.type = EntityType::ENEMY_PROJECTILE;
-			Projectiles.push_back(newProjectile);
-			shootTimer = 0;
-		}
-
-	break;
-	case State::ENDSCREEN:
-		//Code
-	
-		//Exit endscreen
-		if (IsKeyReleased(KEY_ENTER) && !newHighScore)
-		{
-			Continue();
-		}
-
-	
-
-		if (newHighScore)
-		{
-			if (CheckCollisionPointRec(GetMousePosition(), textBox)) mouseOnText = true;
-			else mouseOnText = false;
-
-			if (mouseOnText)
-			{
-				// Set the window's cursor to the I-Beam
-				SetMouseCursor(MOUSE_CURSOR_IBEAM);
-
-				// Get char pressed on the queue
-				int key = GetCharPressed();
-
-				// Check if more characters have been pressed on the same frame
-				while (key > 0)
-				{
-					// NOTE: Only allow keys in range [32..125]
-					if ((key >= 32) && (key <= 125) && (letterCount < 9))
-					{
-						name[letterCount] = (char)key;
-						name[letterCount + 1] = '\0'; // Add null terminator at the end of the string.
-						letterCount++;
-					}
-
-					key = GetCharPressed();  // Check next character in the queue
-				}
-
-				//Remove chars 
-				if (IsKeyPressed(KEY_BACKSPACE))
-				{
-					letterCount--;
-					if (letterCount < 0) letterCount = 0;
-					name[letterCount] = '\0';
-				}
-			}
-			else SetMouseCursor(MOUSE_CURSOR_DEFAULT);
-
-			if (mouseOnText)
-			{
-				framesCounter++;
-			}
-			else
-			{
-				framesCounter = 0;
-			}
-
-			// If the name is right legth and enter is pressed, exit screen by setting highscore to false and add 
-			// name + score to scoreboard
-			if (letterCount > 0 && letterCount < 9 && IsKeyReleased(KEY_ENTER))
-			{
-				std::string nameEntry(name);
-
-				InsertNewHighScore(nameEntry);
-
-				newHighScore = false;
-			}
-
-
-		}
-		
-
-
-		break;
-	default:
-		//SHOULD NOT HAPPEN
-		break;
 	}
+
+	for (auto& proj : Projectiles) proj.Update();
+	for (auto& wall : Walls) wall.Update();
+
+	HandleCollisions();
+
+	UpdateBackground();
+
+	if (Aliens.empty())
+		SpawnAliens();
+
+	SpawnEnemyProjectile();
+
+	if (player.lives < 1)
+		End();
 }
 
 
@@ -427,19 +281,7 @@ void Game::InsertNewHighScore(std::string name)
 	}
 }
 
-void Game::LoadLeaderboard()
-{
-	// CLEAR LEADERBOARD
-
-	// OPEN FILE
-
-	// READ DATA
-
-	// WRITE DATA ONTO LEADERBOARD
-
-	//CLOSE FILE
-}
-
+//Dunno what is going on here, the file doesn't exist so this function isn't necessary but it wont build or compile if i remove it
 void Game::SaveLeaderboard()
 {
 	// SAVE LEADERBOARD AS ARRAY
@@ -599,6 +441,115 @@ void Game::HandleEnemyProjectiles()
 			p--;
 		}
 	}
+}
+
+void Game::HandleInput()
+{
+	if (gameState == State::GAMEPLAY)
+	{
+		// Player shooting
+		if (IsKeyPressed(KEY_SPACE))
+			SpawnPlayerProjectile();
+
+		// Quit
+		if (IsKeyReleased(KEY_Q))
+			End();
+	}
+	else if (gameState == State::STARTSCREEN)
+	{
+		if (IsKeyReleased(KEY_SPACE))
+			*this = Game{ State::GAMEPLAY };
+	}
+	else if (gameState == State::ENDSCREEN)
+	{
+		EndScreenInput();
+	}
+}
+
+void Game::EndScreenInput()
+{
+	if (!newHighScore)
+	{
+		if (IsKeyReleased(KEY_ENTER))
+			Continue();
+		return;
+	}
+
+	mouseOnText = CheckCollisionPointRec(GetMousePosition(), textBox);
+
+	SetMouseCursor(mouseOnText ? MOUSE_CURSOR_IBEAM
+		: MOUSE_CURSOR_DEFAULT);
+
+	if (mouseOnText)
+	{
+		int key = GetCharPressed();
+		while (key > 0)
+		{
+			if ((key >= 32) && (key <= 125) && (letterCount < 8))
+			{
+				name[letterCount++] = (char)key;
+				name[letterCount] = '\0';
+			}
+			key = GetCharPressed();
+		}
+
+		if (IsKeyPressed(KEY_BACKSPACE) && letterCount > 0)
+		{
+			name[--letterCount] = '\0';
+		}
+
+		framesCounter++;
+	}
+	else
+	{
+		framesCounter = 0;
+	}
+
+	if (letterCount > 0 && letterCount < 9 && IsKeyReleased(KEY_ENTER))
+	{
+		std::string nameEntry(name);
+
+		InsertNewHighScore(nameEntry);
+
+		newHighScore = false;
+	}
+}
+
+void Game::SpawnPlayerProjectile()
+{
+	float window_height = static_cast<float>(GetScreenHeight());
+	Projectile newProjectile;
+	newProjectile.position.x = player.x_pos;
+	newProjectile.position.y = window_height - 130;
+	newProjectile.type = EntityType::PLAYER_PROJECTILE;
+	Projectiles.push_back(newProjectile);
+}
+
+void Game::SpawnEnemyProjectile()
+{
+	if (shootTimer <= 59)
+	{
+		shootTimer++;
+		return;
+	}
+	shootTimer = 0;
+
+	int index = Aliens.size() > 1 ? rand() % Aliens.size() : 0;
+
+	Projectile newProjectile;
+	newProjectile.position = Aliens[index].position;
+	newProjectile.position.y += 40;
+	newProjectile.speed = -15;
+	newProjectile.type = EntityType::ENEMY_PROJECTILE;
+	Projectiles.push_back(newProjectile);
+}
+
+void Game::UpdateBackground()
+{
+	playerPos = { player.x_pos, (float)player.player_base_height };
+	cornerPos = { 0, (float)player.player_base_height };
+	offset = lineLength(playerPos, cornerPos) * -1;
+	background.Update(offset / 15);
 }
 
 Player::Player()

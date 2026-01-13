@@ -190,6 +190,14 @@ public:
 	void HandlePlayerProjectiles();
 	void HandleEnemyProjectiles();
 
+	void HandleInput();
+	void EndScreenInput();
+
+	void SpawnPlayerProjectile();
+	void SpawnEnemyProjectile();
+
+	void UpdateBackground();
+
 	bool CheckNewHighScore();
 	void InsertNewHighScore(std::string name);
 
