@@ -555,6 +555,7 @@ void Game::HandlePlayerProjectiles()
 			Aliens.erase(it);
 			Projectiles.erase(Projectiles.begin() + p);
 			p--;
+			score += 100;
 			continue;
 		}
 
@@ -583,6 +584,17 @@ void Game::HandleEnemyProjectiles()
 			player.radius, proj.lineStart, proj.lineEnd))
 		{
 			player.lives--;
+			Projectiles.erase(Projectiles.begin() + p);
+			p--;
+		}
+
+		auto wit = std::find_if(Walls.begin(), Walls.end(),
+			[&](Wall& w) { return CheckCollision(w.position, w.radius, proj.lineStart, proj.lineEnd); });
+
+		if (wit != Walls.end())
+		{
+			wit->health--;
+			if (wit->health <= 0) Walls.erase(wit);
 			Projectiles.erase(Projectiles.begin() + p);
 			p--;
 		}
