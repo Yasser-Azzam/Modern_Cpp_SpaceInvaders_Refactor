@@ -109,125 +109,20 @@ void Game::Update()
 }
 
 
-// TODO: Rendering logic depends directly on Raylib types and game state internals.
-// Introduce a rendering layer that consumes read-only state.
 void Game::Render()
 {
 	switch (gameState)
 	{
 	case State::STARTSCREEN:
-		//Code
-		DrawText("SPACE INVADERS", 200, 100, 160, YELLOW);
-
-		DrawText("PRESS SPACE TO BEGIN", 200, 350, 40, YELLOW);
-
-
+		RenderStartScreen();
 		break;
+
 	case State::GAMEPLAY:
-		//Code
-
-
-		//background render LEAVE THIS AT TOP
-		background.Render();
-
-		DrawText(TextFormat("Score: %i", score), 50, 20, 40, YELLOW);
-		DrawText(TextFormat("Lives: %i", player.lives), 50, 70, 40, YELLOW);
-
-		//player rendering 
-		player.Render(resources.shipTextures[player.activeTexture].get());
-
-		//projectile rendering
-		for (int i = 0; i < Projectiles.size(); i++)
-		{
-			Projectiles[i].Render(resources.laserTexture.get());
-		}
-
-		// wall rendering 
-		for (int i = 0; i < Walls.size(); i++)
-		{
-			Walls[i].Render(resources.barrierTexture.get());
-		}
-
-		//alien rendering  
-		for (int i = 0; i < Aliens.size(); i++)
-		{
-			Aliens[i].Render(resources.alienTexture.get());
-		}
-
+		RenderGameplay();
 		break;
+
 	case State::ENDSCREEN:
-		//Code
-
-
-		if (newHighScore)
-		{
-			DrawText("NEW HIGHSCORE!", 600, 300, 60, YELLOW);
-
-
-
-			// BELOW CODE IS FOR NAME INPUT RENDER
-			DrawText("PLACE MOUSE OVER INPUT BOX!", 600, 400, 20, YELLOW);
-
-			DrawRectangleRec(textBox, LIGHTGRAY);
-			if (mouseOnText)
-			{
-				// HOVER CONFIRMIATION
-				DrawRectangleLines((int)textBox.x, (int)textBox.y, (int)textBox.width, (int)textBox.height, RED);
-			}
-			else
-			{
-				DrawRectangleLines((int)textBox.x, (int)textBox.y, (int)textBox.width, (int)textBox.height, DARKGRAY);
-			}
-
-			//Draw the name being typed out
-			DrawText(name, (int)textBox.x + 5, (int)textBox.y + 8, 40, MAROON);
-
-			//Draw the text explaining how many characters are used
-			DrawText(TextFormat("INPUT CHARS: %i/%i", letterCount, 8), 600, 600, 20, YELLOW);
-
-			if (mouseOnText)
-			{
-				if (letterCount < 9)
-				{
-					// Draw blinking underscore char
-					if (((framesCounter / 20) % 2) == 0)
-					{
-						DrawText("_", (int)textBox.x + 8 + MeasureText(name, 40), (int)textBox.y + 12, 40, MAROON);
-					}
-
-				}
-				else
-				{
-					//Name needs to be shorter
-					DrawText("Press BACKSPACE to delete chars...", 600, 650, 20, YELLOW);
-				}
-				
-			}
-
-			// Explain how to continue when name is input
-			if (letterCount > 0 && letterCount < 9)
-			{
-				DrawText("PRESS ENTER TO CONTINUE", 600, 800, 40, YELLOW);
-			}
-
-		}
-		else {
-			// If no highscore or name is entered, show scoreboard and call it a day
-			DrawText("PRESS ENTER TO CONTINUE", 600, 200, 40, YELLOW);
-
-			DrawText("LEADERBOARD", 50, 100, 40, YELLOW);
-
-			for (int i = 0; i < Leaderboard.size(); i++)
-			{
-				char* tempNameDisplay = Leaderboard[i].name.data();
-				DrawText(tempNameDisplay, 50, 140 + (i * 40), 40, YELLOW);
-				DrawText(TextFormat("%i", Leaderboard[i].score), 350, 140 + (i * 40), 40, YELLOW);
-			}
-		}
-
-		
-
-
+		RenderEndScreen();
 		break;
 	default:
 		//SHOULD NOT HAPPEN
@@ -281,30 +176,14 @@ void Game::InsertNewHighScore(std::string name)
 	}
 }
 
+void Game::LoadLeaderboard()
+{
+}
+
 //Dunno what is going on here, the file doesn't exist so this function isn't necessary but it wont build or compile if i remove it
 void Game::SaveLeaderboard()
 {
-	// SAVE LEADERBOARD AS ARRAY
 
-	// OPEN FILE
-	std::fstream file;
-
-	file.open("Leaderboard");
-
-	if (!file)
-	{
-		std::cout << "file not found \n";
-
-	}
-	else
-	{
-		std::cout << "file found \n";
-	}
-	// CLEAR FILE
-
-	// WRITE ARRAY DATA INTO FILE
-
-	// CLOSE FILE
 }
 
 // TODO: Collision detection uses floating-point equality(Core guidelines says to avoid that)
@@ -552,6 +431,131 @@ void Game::UpdateBackground()
 	background.Update(offset / 15);
 }
 
+void Game::RenderStartScreen() const
+{
+	DrawText("SPACE INVADERS", 200, 100, 160, YELLOW);
+
+	DrawText("PRESS SPACE TO BEGIN", 200, 350, 40, YELLOW);
+
+}
+
+void Game::RenderGameplay() const
+{
+	background.Render();
+
+	RenderHUD();
+	RenderPlayer();
+	RenderProjectiles();
+	RenderWalls();
+	RenderAliens();
+}
+
+void Game::RenderEndScreen() const
+{
+	if (newHighScore)
+		RenderHighScoreEntry();
+	else
+		RenderLeaderboard();
+}
+
+void Game::RenderHUD() const
+{
+	DrawText(TextFormat("Score: %i", score), 50, 20, 40, YELLOW);
+	DrawText(TextFormat("Lives: %i", player.lives), 50, 70, 40, YELLOW);
+}
+
+void Game::RenderPlayer() const
+{
+	player.Render(GetPlayerTexture());
+}
+
+Texture2D Game::GetPlayerTexture() const
+{
+	return  resources.shipTextures[player.activeTexture].get();
+}
+
+void Game::RenderProjectiles() const
+{
+	for (const auto& proj : Projectiles)
+		proj.Render(resources.laserTexture.get());
+}
+
+void Game::RenderWalls() const
+{
+	for (const auto& wall : Walls)
+		wall.Render(resources.barrierTexture.get());
+}
+
+void Game::RenderAliens() const
+{
+	for (const auto& alien : Aliens)
+		alien.Render(resources.alienTexture.get());
+}
+
+void Game::RenderHighScoreEntry() const
+{
+	DrawText("NEW HIGHSCORE!", 600, 300, 60, YELLOW);
+
+	// BELOW CODE IS FOR NAME INPUT RENDER
+	DrawText("PLACE MOUSE OVER INPUT BOX!", 600, 400, 20, YELLOW);
+
+	DrawRectangleRec(textBox, LIGHTGRAY);
+	if (mouseOnText)
+	{
+		// HOVER CONFIRMIATION
+		DrawRectangleLines((int)textBox.x, (int)textBox.y, (int)textBox.width, (int)textBox.height, RED);
+	}
+	else
+	{
+		DrawRectangleLines((int)textBox.x, (int)textBox.y, (int)textBox.width, (int)textBox.height, DARKGRAY);
+	}
+
+	//Draw the name being typed out
+	DrawText(name, (int)textBox.x + 5, (int)textBox.y + 8, 40, MAROON);
+
+	//Draw the text explaining how many characters are used
+	DrawText(TextFormat("INPUT CHARS: %i/%i", letterCount, 8), 600, 600, 20, YELLOW);
+
+	if (mouseOnText)
+	{
+		if (letterCount < 9)
+		{
+			// Draw blinking underscore char
+			if (((framesCounter / 20) % 2) == 0)
+			{
+				DrawText("_", (int)textBox.x + 8 + MeasureText(name, 40), (int)textBox.y + 12, 40, MAROON);
+			}
+
+		}
+		else
+		{
+			//Name needs to be shorter
+			DrawText("Press BACKSPACE to delete chars...", 600, 650, 20, YELLOW);
+		}
+
+	}
+
+	// Explain how to continue when name is input
+	if (letterCount > 0 && letterCount < 9)
+	{
+		DrawText("PRESS ENTER TO CONTINUE", 600, 800, 40, YELLOW);
+	}
+}
+
+void Game::RenderLeaderboard() const
+{
+	DrawText("PRESS ENTER TO CONTINUE", 600, 200, 40, YELLOW);
+	DrawText("LEADERBOARD", 50, 100, 40, YELLOW);
+
+	for (int i = 0; i < Leaderboard.size(); i++)
+	{
+		const char* tempNameDisplay = Leaderboard[i].name.c_str();
+		DrawText(tempNameDisplay, 50, 140 + (i * 40), 40, YELLOW);
+		DrawText(TextFormat("%i", Leaderboard[i].score),
+			350, 140 + (i * 40), 40, YELLOW);
+	}
+}
+
 Player::Player()
 {
 	x_pos = static_cast<float>(GetScreenWidth()) / 2.0f;
@@ -600,7 +604,7 @@ void Player::Update()
 	
 }
 
-void Player::Render(Texture2D texture) 
+void Player::Render(Texture2D texture) const
 {
 	float window_height = GetScreenHeight(); 
 
@@ -633,7 +637,7 @@ void Projectile::Update()
 	lineEnd.x   = position.x;
 }
 
-void Projectile::Render(Texture2D texture)
+void Projectile::Render(Texture2D texture) const
 {
 	DrawTexturePro(texture,
 		{
@@ -652,7 +656,7 @@ void Projectile::Render(Texture2D texture)
 		WHITE);
 }
 
-void Wall::Render(Texture2D texture)
+void Wall::Render(Texture2D texture) const
 {
 	DrawTexturePro(texture,
 		{
@@ -713,7 +717,7 @@ void Alien::Update()
 	}
 }
 
-void Alien::Render(Texture2D texture) 
+void Alien::Render(Texture2D texture) const
 {
 
 	
@@ -744,7 +748,7 @@ void Star::Update(float starOffset)
 
 }
 
-void Star::Render()
+void Star::Render() const
 {
 	DrawCircle((int)position.x, (int)position.y, size, color);
 }
@@ -775,7 +779,7 @@ void Background::Update(float offset)
 	
 }
 
-void Background::Render()
+void Background::Render() const
 {
 	for (int i = 0; i < Stars.size(); i++)
 	{

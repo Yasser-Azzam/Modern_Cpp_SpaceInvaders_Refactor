@@ -44,7 +44,7 @@ public:
 	Player(); 
 
 	void Update();
-	void Render(Texture2D texture);
+	void Render(Texture2D texture) const;
 
 };
 
@@ -61,7 +61,7 @@ public:
 	Vector2 lineEnd{};
 
 	void Update();
-	void Render(Texture2D texture);
+	void Render(Texture2D texture) const;
 };
 
 struct Wall 
@@ -76,7 +76,7 @@ public:
 	int radius = 60;
 
 	void Update();
-	void Render(Texture2D texture);
+	void Render(Texture2D texture) const;
 };
 
 struct Alien
@@ -95,7 +95,7 @@ public:
 	int speed = 2;
 
 	void Update();
-	void Render(Texture2D texture);
+	void Render(Texture2D texture) const;
 };
 
 
@@ -108,7 +108,7 @@ struct Star
 	float size = 0.0f;
 
 	void Update(float starOffset);
-	void Render();
+	void Render() const;
 };
 
 struct Background
@@ -119,7 +119,7 @@ public:
 	explicit Background(int starAmount); // replaces Initialize()
 
 	void Update(float offset);
-	void Render();
+	void Render() const;
 };
 
 struct Game
@@ -197,6 +197,20 @@ public:
 	void SpawnEnemyProjectile();
 
 	void UpdateBackground();
+
+	void RenderStartScreen() const;
+	void RenderGameplay() const;
+	void RenderEndScreen() const;
+
+	void RenderHUD() const;
+	void RenderPlayer() const;
+	Texture2D GetPlayerTexture() const;
+	void RenderProjectiles() const;
+	void RenderWalls() const;
+	void RenderAliens() const;
+
+	void RenderHighScoreEntry() const;
+	void RenderLeaderboard() const;
 
 	bool CheckNewHighScore();
 	void InsertNewHighScore(std::string name);
