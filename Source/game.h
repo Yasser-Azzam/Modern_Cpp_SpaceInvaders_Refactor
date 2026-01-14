@@ -102,26 +102,10 @@ public:
 	float GetRadius() const;
 };
 
-
-struct Star
-{
-	Vector2 initPosition{ 0.0f, 0.0f };
-	Vector2 position{ 0.0f, 0.0f };
-
-	Color color = GRAY;
-	float size = 0.0f;
-
-	void Update(float starOffset);
-	void Render() const;
-};
-
 struct Background
 {
 public:
 	std::vector<Star> Stars;
-
-	void Update(float offset);
-	void Render() const;
 };
 
 struct Game
