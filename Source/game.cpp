@@ -41,7 +41,6 @@ void Game::End()
 
 void Game::Continue()
 {
-	SaveLeaderboard();
 	gameState = State::STARTSCREEN;
 }
 
@@ -208,16 +207,6 @@ void Game::InsertNewHighScore(std::string name)
 
 		}
 	}
-}
-
-void Game::LoadLeaderboard()
-{
-}
-
-//Dunno what is going on here, the file doesn't exist so this function isn't necessary but it wont build or compile if i remove it
-void Game::SaveLeaderboard()
-{
-
 }
 
 void Game::SpawnPlayerProjectile()

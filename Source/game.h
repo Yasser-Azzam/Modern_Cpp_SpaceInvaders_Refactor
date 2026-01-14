@@ -181,7 +181,4 @@ public:
 
 	bool CheckNewHighScore();
 	void InsertNewHighScore(std::string name);
-
-	void LoadLeaderboard();
-	void SaveLeaderboard();
 };
