@@ -186,70 +186,40 @@ void Game::SaveLeaderboard()
 
 }
 
+Vector2 ClosestPointOnSegment(const Vector2& A, const Vector2& B, const Vector2& P)
+{
+	Vector2 AB = { B.x - A.x, B.y - A.y };
+	Vector2 AP = { P.x - A.x, P.y - A.y };
+	float ab2 = AB.x * AB.x + AB.y * AB.y;
+	float ap_ab = AP.x * AB.x + AP.y * AB.y;
+	float t = ap_ab / ab2;
+
+	// Clamp t to [0,1] to stay on the segment
+	if (t < 0.0f) t = 0.0f;
+	else if (t > 1.0f) t = 1.0f;
+
+	return { A.x + AB.x * t, A.y + AB.y * t };
+}
+
+// Returns squared distance between two points
+float DistanceSquared(const Vector2& a, const Vector2& b)
+{
+	float dx = b.x - a.x;
+	float dy = b.y - a.y;
+	return dx * dx + dy * dy;
+}
+
 // TODO: Collision detection uses floating-point equality(Core guidelines says to avoid that)
 bool Game::CheckCollision(Vector2 circlePos, float circleRadius, Vector2 lineStart, Vector2 lineEnd)
 {
-	// our objective is to calculate the distance between the closest point on the line to the centre of the circle, 
-	// and determine if it is shorter than the radius.
+	// Find closest point on line segment to circle center
+	Vector2 closest = ClosestPointOnSegment(lineStart, lineEnd, circlePos);
 
-	// check if either edge of line is within circle
-	if (pointInCircle(circlePos, circleRadius, lineStart) || pointInCircle(circlePos, circleRadius, lineEnd))
-	{
-		return true;
-	}
+	// Compare squared distances to avoid sqrt for performance
+	float distSq = DistanceSquared(circlePos, closest);
+	float radiusSq = circleRadius * circleRadius;
 
-	// simplify variables
-	Vector2 A = lineStart;
-	Vector2 B = lineEnd;
-	Vector2 C = circlePos;
-
-	// calculate the length of the line
-	float length = lineLength(A, B);
-	
-	// calculate the dot product
-	float dotP = (((C.x - A.x) * (B.x - A.x)) + ((C.y - A.y) * (B.y - A.y))) / pow(length, 2);
-
-	// use dot product to find closest point
-	float closestX = A.x + (dotP * (B.x - A.x));
-	float closestY = A.y + (dotP * (B.y - A.y));
-
-	//find out if coordinates are on the line.
-	// we do this by comparing the distance of the dot to the edges, with two vectors
-	// if the distance of the vectors combined is the same as the length the point is on the line
-
-	//since we are using floating points, we will allow the distance to be slightly innaccurate to create a smoother collision
-	float buffer = 0.1;
-
-	float closeToStart = lineLength(A, { closestX, closestY }); //closestX + Y compared to line Start
-	float closeToEnd = lineLength(B, { closestX, closestY });	//closestX + Y compared to line End
-
-	float closestLength = closeToStart + closeToEnd;
-
-	if (closestLength == length + buffer || closestLength == length - buffer)
-	{
-		//Point is on the line!
-
-		//Compare length between closest point and circle centre with circle radius
-
-		float closeToCentre = lineLength(A, { closestX, closestY }); //closestX + Y compared to circle centre
-
-		if (closeToCentre < circleRadius)
-		{
-			//Line is colliding with circle!
-			return true;
-		}
-		else
-		{
-			//Line is not colliding
-			return false;
-		}
-	}
-	else
-	{
-		// Point is not on the line, line is not colliding
-		return false;
-	}
-
+	return distSq <= radiusSq;
 }
 
 void Game::HandleCollisions()
@@ -260,66 +230,97 @@ void Game::HandleCollisions()
 
 void Game::HandlePlayerProjectiles()
 {
-	for (int p = 0; p < Projectiles.size(); ++p)
+	for (auto& proj : Projectiles)
 	{
-		Projectile& proj = Projectiles[p];
-
-		if (proj.type != EntityType::PLAYER_PROJECTILE) 
+		if (proj.type != EntityType::PLAYER_PROJECTILE)
 			continue;
 
 		// Aliens hit
-		auto it = std::find_if(Aliens.begin(), Aliens.end(),
+		auto itAlien = std::find_if(Aliens.begin(), Aliens.end(),
 			[&](Alien& a) { return CheckCollision(a.position, a.radius, proj.lineStart, proj.lineEnd); });
 
-		if (it != Aliens.end())
+		if (itAlien != Aliens.end())
 		{
-			Aliens.erase(it);
-			Projectiles.erase(Projectiles.begin() + p);
-			p--;
+			itAlien->alive = false;   // mark alien dead
+			proj.alive = false;       // mark projectile dead
 			score += 100;
 			continue;
 		}
 
 		// Walls hit
-		auto wit = std::find_if(Walls.begin(), Walls.end(),
+		auto itWall = std::find_if(Walls.begin(), Walls.end(),
 			[&](Wall& w) { return CheckCollision(w.position, w.radius, proj.lineStart, proj.lineEnd); });
 
-		if (wit != Walls.end())
+		if (itWall != Walls.end())
 		{
-			wit->health--;
-			if (wit->health <= 0) Walls.erase(wit);
-			Projectiles.erase(Projectiles.begin() + p);
-			p--;
+			itWall->health--;
+			if (itWall->health <= 0) itWall->active = false; // mark wall dead
+			proj.alive = false;
 		}
 	}
+
+	// ERASE DEAD PROJECTILES
+	Projectiles.erase(
+		std::remove_if(Projectiles.begin(), Projectiles.end(),
+			[](const Projectile& p) { return !p.isAlive(); }),
+		Projectiles.end()
+	);
+
+	// ERASE DEAD ALIENS
+	Aliens.erase(
+		std::remove_if(Aliens.begin(), Aliens.end(),
+			[](const Alien& a) { return !a.alive; }),
+		Aliens.end()
+	);
+
+	// ERASE DEAD WALLS
+	Walls.erase(
+		std::remove_if(Walls.begin(), Walls.end(),
+			[](const Wall& w) { return !w.active; }),
+		Walls.end()
+	);
 }
 
 void Game::HandleEnemyProjectiles()
 {
-	for (int p = 0; p < Projectiles.size(); ++p)
+	for (auto& proj : Projectiles)
 	{
-		Projectile& proj = Projectiles[p];
-		if (proj.type != EntityType::ENEMY_PROJECTILE) continue;
+		if (proj.type != EntityType::ENEMY_PROJECTILE)
+			continue;
 
+		// Player hit
 		if (CheckCollision({ player.x_pos, GetScreenHeight() - player.player_base_height },
 			player.radius, proj.lineStart, proj.lineEnd))
 		{
 			player.lives--;
-			Projectiles.erase(Projectiles.begin() + p);
-			p--;
+			proj.alive = false;
 		}
 
-		auto wit = std::find_if(Walls.begin(), Walls.end(),
+		// Walls hit
+		auto itWall = std::find_if(Walls.begin(), Walls.end(),
 			[&](Wall& w) { return CheckCollision(w.position, w.radius, proj.lineStart, proj.lineEnd); });
 
-		if (wit != Walls.end())
+		if (itWall != Walls.end())
 		{
-			wit->health--;
-			if (wit->health <= 0) Walls.erase(wit);
-			Projectiles.erase(Projectiles.begin() + p);
-			p--;
+			itWall->health--;
+			if (itWall->health <= 0) itWall->active = false; // mark dead
+			proj.alive = false;
 		}
 	}
+
+	// ERASE DEAD PROJECTILES
+	Projectiles.erase(
+		std::remove_if(Projectiles.begin(), Projectiles.end(),
+			[](const Projectile& p) { return !p.isAlive(); }),
+		Projectiles.end()
+	);
+
+	// ERASE DEAD WALLS
+	Walls.erase(
+		std::remove_if(Walls.begin(), Walls.end(),
+			[](const Wall& w) { return !w.active; }),
+		Walls.end()
+	);
 }
 
 void Game::HandleInput()

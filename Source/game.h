@@ -56,9 +56,12 @@ public:
 	Vector2 position{};
 	int speed = 15;
 	EntityType type{};
+	bool alive = true;
 
 	Vector2 lineStart{};
 	Vector2 lineEnd{};
+
+	bool isAlive() const { return alive; }
 
 	void Update();
 	void Render(Texture2D texture) const;
