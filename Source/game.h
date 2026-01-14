@@ -164,6 +164,12 @@ public:
 	void Continue();
 	void Reset(State initialState);
 
+	void ResetGameState(State initialState);
+	void ResetPlayerAndCombat();
+	void ResetWorld();
+	void ResetBackground();
+	void ResetUI();
+
 	void SpawnAliens();
 	void SpawnWalls();
 	void SpawnEnemyProjectile();

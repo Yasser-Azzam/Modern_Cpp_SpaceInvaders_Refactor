@@ -50,26 +50,46 @@ void Game::Continue()
 
 void Game::Reset(State initialState)
 {
+	ResetGameState(initialState);
+	ResetPlayerAndCombat();
+	ResetWorld();
+	ResetBackground();
+	ResetUI();
+}
+
+void Game::ResetGameState(State initialState)
+{
 	gameState = initialState;
 	score = 0;
 	shootTimer = 0;
+	newHighScore = false;
+}
+
+void Game::ResetPlayerAndCombat()
+{
 	player = Player{};
 	Projectiles.clear();
+}
+
+void Game::ResetWorld()
+{
 	SpawnWalls();
 	Aliens.clear();
-	newHighScore = false;
-	BackgroundSystem::Initialize(stars, 600);
 	SpawnAliens();
+}
 
-	// reset UI
+void Game::ResetBackground()
+{
+	BackgroundSystem::Initialize(stars, 600);
+}
+
+void Game::ResetUI()
+{
 	playerName.clear();
 	mouseOnText = false;
 	framesCounter = 0;
 }
 
-// TODO: Game::Update() is really long and deeply nested.
-// It mixes input handling, physics, collision detection, spawning, scoring, and cleanup.
-// Extract responsibilities into smaller functions or systems and reduce nesting by using algorithms if possible.
 void Game::Update()
 {
 	InputSystem::HandleGameInput(*this);
@@ -248,8 +268,6 @@ void Game::RenderEndScreen() const
 	else
 		UISystem::RenderLeaderboard(*this);
 }
-
-
 
 Player::Player()
 {
