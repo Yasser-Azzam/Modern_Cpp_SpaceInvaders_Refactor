@@ -149,8 +149,6 @@ void Game::SpawnAliens()
 			newAlien.position.x = static_cast<float>(formationX + 450 + (col * config.alienSpacing));
 			newAlien.position.y = static_cast<float>(formationY + (row * config.alienSpacing));
 			Aliens.push_back(newAlien);
-			std::cout << "Find Alien -X:" << newAlien.position.x << std::endl;
-			std::cout << "Find Alien -Y:" << newAlien.position.y << std::endl;
 		}
 	}
 
@@ -243,9 +241,8 @@ void Game::UpdateBackground() noexcept
 
 void Game::RenderStartScreen() const noexcept
 {
-	DrawText("SPACE INVADERS", 200, 100, 160, YELLOW);
-
-	DrawText("PRESS SPACE TO BEGIN", 200, 350, 40, YELLOW);
+	DrawText("SPACE INVADERS", config.startScreenTitleX, config.startScreenTitleY, config.startScreenFontSizeLarge, config.startScreenColor);
+	DrawText("PRESS SPACE TO BEGIN", config.startScreenPromptX, config.startScreenPromptY, config.startScreenFontSizeSmall, config.startScreenColor);
 
 }
 
@@ -253,19 +250,19 @@ void Game::RenderGameplay() const noexcept
 {
 	BackgroundSystem::Render(stars);
 
-	PlayerSystem::Render(player, resources);
-	AlienSystem::Render(Aliens, resources);
-	WallSystem::Render(Walls, resources);
-	ProjectileSystem::Render(Projectiles, resources);
-	UISystem::RenderHUD(*this);
+	PlayerSystem::Render(player, resources, config);
+	AlienSystem::Render(Aliens, resources, config);
+	WallSystem::Render(Walls, resources, config);
+	ProjectileSystem::Render(Projectiles, resources, config);
+	UISystem::RenderHUD(*this, config);
 }
 
 void Game::RenderEndScreen() const noexcept
 {
 	if (newHighScore)
-		UISystem::RenderHighScoreEntry(*this);
+		UISystem::RenderHighScoreEntry(*this, config);
 	else
-		UISystem::RenderLeaderboard(*this);
+		UISystem::RenderLeaderboard(*this, config);
 }
 
 Player::Player() noexcept

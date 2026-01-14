@@ -1,5 +1,6 @@
 #pragma once
 #include "game.h"
+#include "GameConfig.h"
 
 struct ProjectileSystem
 {
@@ -16,17 +17,17 @@ struct ProjectileSystem
         }
     }
 
-    static void Render(const std::vector<Projectile>& projectiles, const Resources& resources) noexcept
+    static void Render(const std::vector<Projectile>& projectiles, const Resources& resources, const GameConfig& cfg) noexcept
     {
         for (const auto& proj : projectiles)
         {
             DrawTexturePro(
                 resources.laserTexture.get(),
                 { 0, 0, 176, 176 },
-                { proj.position.x, proj.position.y, 50, 50 },
-                { 25, 25 },
+                { proj.position.x, proj.position.y, cfg.projectileWidth, cfg.projectileHeight },
+                cfg.projectileOrigin,
                 0,
-                WHITE
+                cfg.defaultWhite
             );
         }
     }

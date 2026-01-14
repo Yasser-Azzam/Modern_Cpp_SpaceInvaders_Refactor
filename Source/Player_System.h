@@ -1,6 +1,7 @@
 #pragma once
 #include "game.h"
 #include "raylib.h"
+#include "GameConfig.h"
 
 struct PlayerSystem
 {
@@ -28,7 +29,7 @@ struct PlayerSystem
         }
     }
 
-    static void Render(const Player& player, const Resources& resources) noexcept
+    static void Render(const Player& player, const Resources& resources, const GameConfig& cfg) noexcept
     {
         const float window_height = static_cast<float>(GetScreenHeight());
         const size_t idx = static_cast<size_t>(player.activeTexture % resources.shipTextures.size());
@@ -36,10 +37,10 @@ struct PlayerSystem
         DrawTexturePro(
             resources.shipTextures[idx].get(),
             { 0, 0, 352, 352 },
-            { player.x_pos, window_height - player.player_base_height, 100, 100 },
-            { 50, 50 },
+            { player.x_pos, window_height - player.player_base_height, cfg.playerWidth, cfg.playerHeight },
+            cfg.playerOrigin,
             0,
-            WHITE
+            cfg.defaultWhite
         );
     }
 };

@@ -1,5 +1,7 @@
 #pragma once
 #include "game.h"
+#include "GameConfig.h"
+
 
 struct WallSystem
 {
@@ -14,20 +16,21 @@ struct WallSystem
         std::erase_if(walls, [](const Wall& w) { return !w.active; });
     }
 
-    static void Render(const std::vector<Wall>& walls, const Resources& resources) noexcept
+    static void Render(const std::vector<Wall>& walls, const Resources& resources, const GameConfig& cfg) noexcept
     {
         for (const auto& wall : walls)
         {
             DrawTexturePro(
                 resources.barrierTexture.get(),
                 { 0, 0, 704, 704 },
-                { wall.position.x, wall.position.y, 200, 200 },
-                { 100, 100 },
+                { wall.position.x, wall.position.y, cfg.wallWidth, cfg.wallHeight },
+                cfg.wallOrigin,
                 0,
-                WHITE
+                cfg.defaultWhite
             );
 
-            DrawText(TextFormat("%i", wall.health), static_cast<int>(wall.position.x) - 21, static_cast<int>(wall.position.y) + 10, 40, RED);
+            DrawText(TextFormat("%i", wall.health), static_cast<int>(wall.position.x) + cfg.wallHealthTextOffsetX, 
+                static_cast<int>(wall.position.y) + cfg.wallHealthTextOffsetY, cfg.wallHealthFontSize, cfg.wallHealthColor);
         }
     }
 };

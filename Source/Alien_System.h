@@ -1,6 +1,7 @@
 #pragma once
 #include "game.h"
 #include "raylib.h"
+#include "GameConfig.h"
 
 struct AlienSystem
 {
@@ -30,17 +31,17 @@ struct AlienSystem
         }
     }
 
-    static void Render(const std::vector<Alien>& aliens, const Resources& resources) noexcept
+    static void Render(const std::vector<Alien>& aliens, const Resources& resources, const GameConfig& cfg) noexcept
     {
         for (const auto& alien : aliens)
         {
             DrawTexturePro(
                 resources.alienTexture.get(),
                 { 0, 0, 352, 352 },
-                { alien.position.x, alien.position.y, 100, 100 },
-                { 50, 50 },
+                { alien.position.x, alien.position.y, cfg.alienWidth, cfg.alienHeight },
+                cfg.alienOrigin,
                 0,
-                WHITE
+                cfg.defaultWhite
             );
         }
     }
