@@ -41,14 +41,7 @@ Game::Game(State initialState)
 
 	float wall_distance = window_width / (wallCount + 1);
 
-	for (int i = 0; i < wallCount; i++)
-	{
-		Wall newWall;
-		newWall.position.y = window_height - 250;
-		newWall.position.x = wall_distance * (i + 1);
-		newWall.active = true;
-		Walls.push_back(newWall);
-	}
+	SpawnWalls();
 
 	player = Player{};
 
@@ -73,6 +66,25 @@ void Game::Continue()
 {
 	SaveLeaderboard();
 	gameState = State::STARTSCREEN;
+}
+
+void Game::Reset(State initialState)
+{
+	gameState = initialState;
+	score = 0;
+	shootTimer = 0;
+	player = Player{};
+	Projectiles.clear();
+	SpawnWalls();
+	Aliens.clear();
+	newHighScore = false;
+	background = Background(600);
+	SpawnAliens();
+
+	// reset UI
+	playerName.clear();
+	mouseOnText = false;
+	framesCounter = 0;
 }
 
 // TODO: Game::Update() is really long and deeply nested.
@@ -145,6 +157,23 @@ void Game::SpawnAliens()
 
 }
 
+void Game::SpawnWalls()
+{
+	Walls.clear();
+	float window_width = static_cast<float>(GetScreenWidth());
+	float window_height = static_cast<float>(GetScreenHeight());
+	float wall_distance = window_width / (wallCount + 1);
+
+	for (int i = 0; i < wallCount; i++)
+	{
+		Wall newWall;
+		newWall.position.y = window_height - 250;
+		newWall.position.x = wall_distance * (i + 1);
+		newWall.active = true;
+		Walls.push_back(newWall);
+	}
+}
+
 bool Game::CheckNewHighScore()
 {
 	if (score > Leaderboard[4].score)
@@ -207,7 +236,7 @@ void Game::HandleInput()
 	else if (gameState == State::STARTSCREEN)
 	{
 		if (IsKeyReleased(KEY_SPACE))
-			*this = Game{ State::GAMEPLAY };
+			Reset(State::GAMEPLAY);
 	}
 	else if (gameState == State::ENDSCREEN)
 	{
@@ -224,27 +253,26 @@ void Game::EndScreenInput()
 		return;
 	}
 
+	// Mouse hover detection
 	mouseOnText = CheckCollisionPointRec(GetMousePosition(), textBox);
-
-	SetMouseCursor(mouseOnText ? MOUSE_CURSOR_IBEAM
-		: MOUSE_CURSOR_DEFAULT);
+	SetMouseCursor(mouseOnText ? MOUSE_CURSOR_IBEAM : MOUSE_CURSOR_DEFAULT);
 
 	if (mouseOnText)
 	{
 		int key = GetCharPressed();
 		while (key > 0)
 		{
-			if ((key >= 32) && (key <= 125) && (letterCount < 8))
+			if (playerName.size() < maxNameLength && key >= 32 && key <= 125)
 			{
-				name[letterCount++] = (char)key;
-				name[letterCount] = '\0';
+				playerName.push_back(static_cast<char>(key));
 			}
 			key = GetCharPressed();
 		}
 
-		if (IsKeyPressed(KEY_BACKSPACE) && letterCount > 0)
+		// Backspace
+		if (IsKeyPressed(KEY_BACKSPACE) && !playerName.empty())
 		{
-			name[--letterCount] = '\0';
+			playerName.pop_back();
 		}
 
 		framesCounter++;
@@ -254,13 +282,12 @@ void Game::EndScreenInput()
 		framesCounter = 0;
 	}
 
-	if (letterCount > 0 && letterCount < 9 && IsKeyReleased(KEY_ENTER))
+	// Confirm input
+	if (!playerName.empty() && IsKeyReleased(KEY_ENTER))
 	{
-		std::string nameEntry(name);
-
-		InsertNewHighScore(nameEntry);
-
+		InsertNewHighScore(playerName);
 		newHighScore = false;
+		playerName.clear();
 	}
 }
 
@@ -381,19 +408,19 @@ void Game::RenderHighScoreEntry() const
 	}
 
 	//Draw the name being typed out
-	DrawText(name, (int)textBox.x + 5, (int)textBox.y + 8, 40, MAROON);
+	DrawText(playerName.c_str(), (int)textBox.x + 5, (int)textBox.y + 8, 40, MAROON);
 
 	//Draw the text explaining how many characters are used
-	DrawText(TextFormat("INPUT CHARS: %i/%i", letterCount, 8), 600, 600, 20, YELLOW);
+	DrawText(TextFormat("INPUT CHARS: %i/%i", playerName.size(), 8), 600, 600, 20, YELLOW);
 
 	if (mouseOnText)
 	{
-		if (letterCount < 9)
+		if (playerName.size() < 9)
 		{
 			// Draw blinking underscore char
 			if (((framesCounter / 20) % 2) == 0)
 			{
-				DrawText("_", (int)textBox.x + 8 + MeasureText(name, 40), (int)textBox.y + 12, 40, MAROON);
+				DrawText("_", (int)textBox.x + 8 + MeasureText(playerName.c_str(), 40), (int)textBox.y + 12, 40, MAROON);
 			}
 
 		}
@@ -406,7 +433,7 @@ void Game::RenderHighScoreEntry() const
 	}
 
 	// Explain how to continue when name is input
-	if (letterCount > 0 && letterCount < 9)
+	if (playerName.size() > 0 && playerName.size() < 9)
 	{
 		DrawText("PRESS ENTER TO CONTINUE", 600, 800, 40, YELLOW);
 	}

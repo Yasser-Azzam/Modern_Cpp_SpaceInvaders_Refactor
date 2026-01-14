@@ -182,8 +182,8 @@ public:
 	float offset = 0.0f;
 
 	// UI input (still legacy — will refactor later)
-	char name[10] = "\0";
-	int letterCount = 0;
+	std::string playerName;
+	const size_t maxNameLength = 8;
 
 	Rectangle textBox{ 600, 500, 225, 50 };
 	bool mouseOnText = false;
@@ -196,8 +196,10 @@ public:
 
 	void End();
 	void Continue();
+	void Reset(State initialState);
 
 	void SpawnAliens();
+	void SpawnWalls();
 
 	void HandleCollisions();
 
