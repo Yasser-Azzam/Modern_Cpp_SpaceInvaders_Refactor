@@ -42,12 +42,12 @@ public:
 
 	EntityType type = EntityType::PLAYER;
 
-	Player(); 
+	Player() noexcept;
 
-	void TakeDamage(int amount = 1);
-	Vector2 GetPosition() const;
-	float GetRadius() const;
-	int GetLives() const;
+	void TakeDamage(int amount = 1) noexcept;
+	Vector2 GetPosition() const noexcept;
+	float GetRadius() const noexcept;
+	int GetLives() const noexcept;
 };
 
 
@@ -63,7 +63,7 @@ public:
 	Vector2 lineStart{};
 	Vector2 lineEnd{};
 
-	bool isAlive() const { return alive; }
+	bool isAlive() const noexcept { return alive; }
 };
 
 struct Wall 
@@ -77,10 +77,10 @@ public:
 	int health = 50;
 	int radius = 60;
 
-	void TakeDamage(int amount = 1);
-	bool IsDestroyed() const;
-	Vector2 GetPosition() const;
-	float GetRadius() const;
+	void TakeDamage(int amount = 1) noexcept;
+	bool IsDestroyed() const noexcept;
+	Vector2 GetPosition() const noexcept;
+	float GetRadius() const noexcept;
 };
 
 struct Alien
@@ -98,8 +98,8 @@ public:
 	EntityType type = EntityType::ENEMY;
 	int speed = 2;
 
-	Vector2 GetPosition() const;
-	float GetRadius() const;
+	Vector2 GetPosition() const noexcept;
+	float GetRadius() const noexcept;
 };
 
 struct Background
@@ -155,30 +155,30 @@ public:
 	explicit Game(State initialState);
 
 	void Update();
-	void Render();
+	void Render() noexcept;
 
-	void End();
-	void Continue();
+	void End() noexcept;
+	void Continue() noexcept;
 	void Reset(State initialState);
 
-	void ResetGameState(State initialState);
-	void ResetPlayerAndCombat();
+	void ResetGameState(State initialState) noexcept;
+	void ResetPlayerAndCombat() noexcept;
 	void ResetWorld();
 	void ResetBackground();
-	void ResetUI();
-	void CleanupWorld();
+	void ResetUI() noexcept;
+	void CleanupWorld() noexcept;
 
 	void SpawnAliens();
 	void SpawnWalls();
 	void SpawnEnemyProjectile();
 	void SpawnPlayerProjectile();
 
-	void UpdateBackground();
+	void UpdateBackground() noexcept;
 
-	void RenderStartScreen() const;
-	void RenderGameplay() const;
-	void RenderEndScreen() const;
+	void RenderStartScreen() const noexcept;
+	void RenderGameplay() const noexcept;
+	void RenderEndScreen() const noexcept;
 
-	bool CheckNewHighScore();
+	bool CheckNewHighScore() noexcept;
 	void InsertNewHighScore(std::string name);
 };

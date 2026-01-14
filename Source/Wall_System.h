@@ -14,7 +14,7 @@ struct WallSystem
         std::erase_if(walls, [](const Wall& w) { return !w.active; });
     }
 
-    static void Render(const std::vector<Wall>& walls, const Resources& resources)
+    static void Render(const std::vector<Wall>& walls, const Resources& resources) noexcept
     {
         for (const auto& wall : walls)
         {
@@ -27,7 +27,7 @@ struct WallSystem
                 WHITE
             );
 
-            DrawText(TextFormat("%i", wall.health), wall.position.x - 21, wall.position.y + 10, 40, RED);
+            DrawText(TextFormat("%i", wall.health), static_cast<int>(wall.position.x) - 21, static_cast<int>(wall.position.y) + 10, 40, RED);
         }
     }
 };

@@ -4,7 +4,7 @@
 
 struct PlayerSystem
 {
-    static void Update(Player& player)
+    static void Update(Player& player) noexcept
     {
         // Movement
         int direction = 0;
@@ -13,12 +13,13 @@ struct PlayerSystem
 
         player.x_pos += player.speed * direction;
 
+        const float screenWidth = static_cast<float>(GetScreenWidth());
+
         if (player.x_pos < player.radius)
             player.x_pos = player.radius;
-        else if (player.x_pos > GetScreenWidth() - player.radius)
-            player.x_pos = GetScreenWidth() - player.radius;
+        else if (player.x_pos > screenWidth - player.radius)
+            player.x_pos = screenWidth - player.radius;
 
-        // Animation frame
         player.timer += GetFrameTime();
         if (player.timer > 0.4f)
         {
@@ -27,11 +28,13 @@ struct PlayerSystem
         }
     }
 
-    static void Render(const Player& player, const Resources& resources)
+    static void Render(const Player& player, const Resources& resources) noexcept
     {
-        float window_height = GetScreenHeight();
+        const float window_height = static_cast<float>(GetScreenHeight());
+        const size_t idx = static_cast<size_t>(player.activeTexture % resources.shipTextures.size());
+        
         DrawTexturePro(
-            resources.shipTextures[player.activeTexture].get(),
+            resources.shipTextures[idx].get(),
             { 0, 0, 352, 352 },
             { player.x_pos, window_height - player.player_base_height, 100, 100 },
             { 50, 50 },

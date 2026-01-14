@@ -5,7 +5,7 @@
 
 struct CollisionSystem
 {
-    static bool CheckCollisionCircleLine(Vector2 circlePos, float radius, Vector2 lineStart, Vector2 lineEnd);
+    static bool CheckCollisionCircleLine(Vector2 circlePos, float radius, Vector2 lineStart, Vector2 lineEnd) noexcept;
 
     static void HandleProjectileCollisions(CollisionContext& ctx);
 };

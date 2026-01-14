@@ -4,9 +4,9 @@
 
 struct AlienSystem
 {
-    static void Update(std::vector<Alien>& aliens)
+    static void Update(std::vector<Alien>& aliens) noexcept
     {
-        int window_width = GetScreenWidth();
+        const int window_width = GetScreenWidth();
         for (auto& alien : aliens)
         {
             if (alien.moveRight)
@@ -30,7 +30,7 @@ struct AlienSystem
         }
     }
 
-    static void Render(const std::vector<Alien>& aliens, const Resources& resources)
+    static void Render(const std::vector<Alien>& aliens, const Resources& resources) noexcept
     {
         for (const auto& alien : aliens)
         {

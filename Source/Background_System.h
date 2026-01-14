@@ -9,13 +9,13 @@ struct Star
     float size{};
     Color color{};
 
-    void Update(float offset)
+    void Update(float offset) noexcept
     {
         position.x = initPosition.x + offset;
         position.y = initPosition.y;
     }
 
-    void Render() const
+    void Render() const noexcept
     {
         DrawCircle(
             static_cast<int>(position.x),
@@ -36,8 +36,8 @@ struct BackgroundSystem
         for (std::size_t i = 0; i < starCount; ++i)
         {
             Star star;
-            star.initPosition.x = GetRandomValue(-150, GetScreenWidth() + 150);
-            star.initPosition.y = GetRandomValue(0, GetScreenHeight());
+            star.initPosition.x = static_cast<float>(GetRandomValue(-150, GetScreenWidth() + 150));
+            star.initPosition.y = static_cast<float>(GetRandomValue(0, GetScreenHeight()));
             star.color = SKYBLUE;
             star.size = GetRandomValue(1, 4) / 2.0f;
 
@@ -46,7 +46,7 @@ struct BackgroundSystem
         }
     }
 
-    static void Update(std::vector<Star>& stars, float offset)
+    static void Update(std::vector<Star>& stars, float offset) noexcept
     {
         for (auto& star : stars)
         {
@@ -54,7 +54,7 @@ struct BackgroundSystem
         }
     }
 
-    static void Render(const std::vector<Star>& stars)
+    static void Render(const std::vector<Star>& stars) noexcept
     {
         for (const auto& star : stars)
         {

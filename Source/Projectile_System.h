@@ -3,7 +3,7 @@
 
 struct ProjectileSystem
 {
-    static void Update(std::vector<Projectile>& projectiles)
+    static void Update(std::vector<Projectile>& projectiles) noexcept
     {
         for (auto& proj : projectiles)
         {
@@ -16,7 +16,7 @@ struct ProjectileSystem
         }
     }
 
-    static void Render(const std::vector<Projectile>& projectiles, const Resources& resources)
+    static void Render(const std::vector<Projectile>& projectiles, const Resources& resources) noexcept
     {
         for (const auto& proj : projectiles)
         {

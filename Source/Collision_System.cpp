@@ -4,19 +4,19 @@
 #include <cmath>
 
 
-static float DistanceSquared(const Vector2& a, const Vector2& b)
+static float DistanceSquared(const Vector2& a, const Vector2& b) noexcept
 {
-    float dx = a.x - b.x;
-    float dy = a.y - b.y;
+    const float dx = a.x - b.x;
+    const float dy = a.y - b.y;
     return dx * dx + dy * dy;
 }
 
-static Vector2 ClosestPointOnSegment(const Vector2& A, const Vector2& B, const Vector2& P)
+static Vector2 ClosestPointOnSegment(const Vector2& A, const Vector2& B, const Vector2& P) noexcept
 {
-    Vector2 AB{ B.x - A.x, B.y - A.y };
-    Vector2 AP{ P.x - A.x, P.y - A.y };
+    const Vector2 AB{ B.x - A.x, B.y - A.y };
+    const Vector2 AP{ P.x - A.x, P.y - A.y };
 
-    float ab2 = AB.x * AB.x + AB.y * AB.y;
+    const float ab2 = AB.x * AB.x + AB.y * AB.y;
     if (ab2 == 0.0f) return A;
 
     float t = (AP.x * AB.x + AP.y * AB.y) / ab2;
@@ -27,11 +27,11 @@ static Vector2 ClosestPointOnSegment(const Vector2& A, const Vector2& B, const V
     return Vector2{ A.x + AB.x * t, A.y + AB.y * t };
 }
 
-bool CollisionSystem::CheckCollisionCircleLine(Vector2 circlePos, float radius, Vector2 lineStart, Vector2 lineEnd)
+bool CollisionSystem::CheckCollisionCircleLine(Vector2 circlePos, float radius, Vector2 lineStart, Vector2 lineEnd) noexcept
 {
-Vector2 closest = ClosestPointOnSegment(lineStart, lineEnd, circlePos);
-    float dist2 = DistanceSquared(circlePos, closest);
-    return dist2 <= radius * radius;
+    const Vector2 closest = ClosestPointOnSegment(lineStart, lineEnd, circlePos);
+        const float dist2 = DistanceSquared(circlePos, closest);
+        return dist2 <= radius * radius;
 }
 
 void CollisionSystem::HandleProjectileCollisions(CollisionContext& ctx)

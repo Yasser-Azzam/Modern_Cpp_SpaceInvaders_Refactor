@@ -4,7 +4,7 @@
 
 class WindowGuard {
 public:
-    WindowGuard(int width, int height, const char* title) 
+    WindowGuard(int width, int height, const char* title) noexcept
     {
         InitWindow(width, height, title);
     }
@@ -16,4 +16,7 @@ public:
 
     WindowGuard(const WindowGuard&) = delete;
     WindowGuard& operator=(const WindowGuard&) = delete;
+
+    WindowGuard(WindowGuard&&) = delete;
+    WindowGuard& operator=(WindowGuard&&) = delete;
 };

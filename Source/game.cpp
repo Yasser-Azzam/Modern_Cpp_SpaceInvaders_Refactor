@@ -18,11 +18,6 @@ Game::Game(State initialState)
 	: gameState(initialState)
 	, score(0)
 {
-	float window_width = static_cast<float>(GetScreenWidth());
-	float window_height = static_cast<float>(GetScreenHeight());
-
-	float wall_distance = window_width / (wallCount + 1);
-
 	BackgroundSystem::Initialize(stars, config.starCount);
 
 	SpawnWalls();
@@ -32,14 +27,14 @@ Game::Game(State initialState)
 	SpawnAliens();
 }
 
-void Game::End()
+void Game::End() noexcept
 {
 	CleanupWorld();
 	newHighScore = CheckNewHighScore();
 	gameState = State::ENDSCREEN;
 }
 
-void Game::Continue()
+void Game::Continue() noexcept
 {
 	gameState = State::STARTSCREEN;
 }
@@ -53,7 +48,7 @@ void Game::Reset(State initialState)
 	ResetUI();
 }
 
-void Game::ResetGameState(State initialState)
+void Game::ResetGameState(State initialState) noexcept
 {
 	gameState = initialState;
 	score = 0;
@@ -61,7 +56,7 @@ void Game::ResetGameState(State initialState)
 	newHighScore = false;
 }
 
-void Game::ResetPlayerAndCombat()
+void Game::ResetPlayerAndCombat() noexcept
 {
 	player = Player{};
 	Projectiles.clear();
@@ -79,14 +74,14 @@ void Game::ResetBackground()
 	BackgroundSystem::Initialize(stars, 600);
 }
 
-void Game::ResetUI()
+void Game::ResetUI() noexcept
 {
 	playerName.clear();
 	mouseOnText = false;
 	framesCounter = 0;
 }
 
-void Game::CleanupWorld()
+void Game::CleanupWorld() noexcept
 {
 	Projectiles.clear();
 	Walls.clear();
@@ -123,7 +118,7 @@ void Game::Update()
 }
 
 
-void Game::Render()
+void Game::Render() noexcept
 {
 	switch (gameState)
 	{
@@ -151,8 +146,8 @@ void Game::SpawnAliens()
 		for (int col = 0; col < config.alienFormationWidth; col++) 
 		{
 			Alien newAlien = Alien();
-			newAlien.position.x = formationX + 450 + (col * config.alienSpacing);
-			newAlien.position.y = formationY + (row * config.alienSpacing);
+			newAlien.position.x = static_cast<float>(formationX + 450 + (col * config.alienSpacing));
+			newAlien.position.y = static_cast<float>(formationY + (row * config.alienSpacing));
 			Aliens.push_back(newAlien);
 			std::cout << "Find Alien -X:" << newAlien.position.x << std::endl;
 			std::cout << "Find Alien -Y:" << newAlien.position.y << std::endl;
@@ -164,9 +159,9 @@ void Game::SpawnAliens()
 void Game::SpawnWalls()
 {
 	Walls.clear();
-	float window_width = static_cast<float>(GetScreenWidth());
-	float window_height = static_cast<float>(GetScreenHeight());
-	float wall_distance = window_width / (wallCount + 1);
+	const float window_width = static_cast<float>(GetScreenWidth());
+	const float window_height = static_cast<float>(GetScreenHeight());
+	const float wall_distance = window_width / (wallCount + 1);
 
 	for (int i = 0; i < wallCount; i++)
 	{
@@ -178,7 +173,7 @@ void Game::SpawnWalls()
 	}
 }
 
-bool Game::CheckNewHighScore()
+bool Game::CheckNewHighScore() noexcept
 {
 	if (score > Leaderboard[4].score)
 	{
@@ -203,7 +198,7 @@ void Game::InsertNewHighScore(std::string name)
 
 			Leaderboard.pop_back();
 
-			i = Leaderboard.size();
+			i = static_cast<int>(Leaderboard.size());
 
 		}
 	}
@@ -211,7 +206,7 @@ void Game::InsertNewHighScore(std::string name)
 
 void Game::SpawnPlayerProjectile()
 {
-	float window_height = static_cast<float>(GetScreenHeight());
+	const float window_height = static_cast<float>(GetScreenHeight());
 	Projectile newProjectile;
 	newProjectile.position.x = player.x_pos;
 	newProjectile.position.y = window_height - 130;
@@ -228,7 +223,7 @@ void Game::SpawnEnemyProjectile()
 	}
 	shootTimer = 0;
 
-	int index = Aliens.size() > 1 ? rand() % Aliens.size() : 0;
+	const int index = Aliens.size() > 1 ? rand() % Aliens.size() : 0;
 
 	Projectile newProjectile;
 	newProjectile.position = Aliens[index].position;
@@ -238,15 +233,15 @@ void Game::SpawnEnemyProjectile()
 	Projectiles.push_back(newProjectile);
 }
 
-void Game::UpdateBackground()
+void Game::UpdateBackground() noexcept
 {
-	playerPos = { player.x_pos, (float)player.player_base_height };
-	cornerPos = { 0, (float)player.player_base_height };
+	playerPos = { player.x_pos, static_cast<float>(player.player_base_height) };
+	cornerPos = { 0, static_cast<float>(player.player_base_height) };
 	offset = MathUtilities::Distance(playerPos, cornerPos) * -1;
 	BackgroundSystem::Update(stars, offset / config.backgroundScrollDivisor);
 }
 
-void Game::RenderStartScreen() const
+void Game::RenderStartScreen() const noexcept
 {
 	DrawText("SPACE INVADERS", 200, 100, 160, YELLOW);
 
@@ -254,7 +249,7 @@ void Game::RenderStartScreen() const
 
 }
 
-void Game::RenderGameplay() const
+void Game::RenderGameplay() const noexcept
 {
 	BackgroundSystem::Render(stars);
 
@@ -265,7 +260,7 @@ void Game::RenderGameplay() const
 	UISystem::RenderHUD(*this);
 }
 
-void Game::RenderEndScreen() const
+void Game::RenderEndScreen() const noexcept
 {
 	if (newHighScore)
 		UISystem::RenderHighScoreEntry(*this);
@@ -273,60 +268,60 @@ void Game::RenderEndScreen() const
 		UISystem::RenderLeaderboard(*this);
 }
 
-Player::Player()
+Player::Player() noexcept
 {
 	x_pos = static_cast<float>(GetScreenWidth()) / 2.0f;
 }
 
-void Player::TakeDamage(int amount)
+void Player::TakeDamage(int amount) noexcept
 {
 	lives -= amount;
 	if (lives < 0) lives = 0;
 }
 
-Vector2 Player::GetPosition() const
+Vector2 Player::GetPosition() const noexcept
 {
 	return { x_pos, GetScreenHeight() - player_base_height };
 }
 
-float Player::GetRadius() const
+float Player::GetRadius() const noexcept
 {
 	return radius;
 }
 
-int Player::GetLives() const
+int Player::GetLives() const noexcept
 {
 	return lives;
 }
 
-void Wall::TakeDamage(int amount)
+void Wall::TakeDamage(int amount) noexcept
 {
 	health -= amount;
 	if (health < 0) health = 0;
 	active = health > 0;
 }
 
-bool Wall::IsDestroyed() const
+bool Wall::IsDestroyed() const noexcept
 {
 	return !active;
 }
 
-Vector2 Wall::GetPosition() const
+Vector2 Wall::GetPosition() const noexcept
 {
 	return position;
 }
 
-float Wall::GetRadius() const
+float Wall::GetRadius() const noexcept
 {
-	return radius;
+	return static_cast<float>(radius);
 }
 
-Vector2 Alien::GetPosition() const
+Vector2 Alien::GetPosition() const noexcept
 {
 	return position;
 }
 
-float Alien::GetRadius() const
+float Alien::GetRadius() const noexcept
 {
 	return radius;
 }
