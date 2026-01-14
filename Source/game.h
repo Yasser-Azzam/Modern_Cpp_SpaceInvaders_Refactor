@@ -43,6 +43,11 @@ public:
 
 	Player(); 
 
+	void TakeDamage(int amount = 1);
+	Vector2 GetPosition() const;
+	float GetRadius() const;
+	int GetLives() const;
+
 	void Update();
 	void Render(Texture2D texture) const;
 
@@ -78,6 +83,11 @@ public:
 	int health = 50;
 	int radius = 60;
 
+	void TakeDamage(int amount = 1);
+	bool IsDestroyed() const;
+	Vector2 GetPosition() const;
+	float GetRadius() const;
+
 	void Update();
 	void Render(Texture2D texture) const;
 };
@@ -96,6 +106,9 @@ public:
 
 	EntityType type = EntityType::ENEMY;
 	int speed = 2;
+
+	Vector2 GetPosition() const;
+	float GetRadius() const;
 
 	void Update();
 	void Render(Texture2D texture) const;

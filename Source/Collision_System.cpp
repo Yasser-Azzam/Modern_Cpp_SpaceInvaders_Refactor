@@ -36,14 +36,13 @@ Vector2 closest = ClosestPointOnSegment(lineStart, lineEnd, circlePos);
 
 void CollisionSystem::HandleProjectileCollisions(Game& game)
 {
-    // Using std::erase_if for safe removal during iteration
     std::erase_if(game.Projectiles, [&](Projectile& proj)
         {
             if (proj.type == EntityType::PLAYER_PROJECTILE)
             {
-                // Check collision with aliens
+                // Aliens
                 auto alienIt = std::find_if(game.Aliens.begin(), game.Aliens.end(),
-                    [&](Alien& a) { return CheckCollisionCircleLine(a.position, a.radius, proj.lineStart, proj.lineEnd); });
+                    [&](Alien& a) { return CheckCollisionCircleLine(a.GetPosition(), a.GetRadius(), proj.lineStart, proj.lineEnd); });
 
                 if (alienIt != game.Aliens.end())
                 {
@@ -52,43 +51,42 @@ void CollisionSystem::HandleProjectileCollisions(Game& game)
                     return true; // remove projectile
                 }
 
-                // Check collision with walls
+                // Walls
                 auto wallIt = std::find_if(game.Walls.begin(), game.Walls.end(),
-                    [&](Wall& w) { return CheckCollisionCircleLine(w.position, w.radius, proj.lineStart, proj.lineEnd); });
+                    [&](Wall& w) { return CheckCollisionCircleLine(w.GetPosition(), w.GetRadius(), proj.lineStart, proj.lineEnd); });
 
                 if (wallIt != game.Walls.end())
                 {
-                    wallIt->health--;
-                    if (wallIt->health <= 0) game.Walls.erase(wallIt);
+                    wallIt->TakeDamage();
+                    if (wallIt->IsDestroyed()) game.Walls.erase(wallIt);
                     return true; // remove projectile
                 }
 
-                return false; // keep projectile
+                return false;
             }
             else if (proj.type == EntityType::ENEMY_PROJECTILE)
             {
-                // Check collision with player
-                Vector2 playerPos{ game.player.x_pos, GetScreenHeight() - game.player.player_base_height };
-                if (CheckCollisionCircleLine(playerPos, game.player.radius, proj.lineStart, proj.lineEnd))
+                // Player
+                if (CheckCollisionCircleLine(game.player.GetPosition(), game.player.GetRadius(), proj.lineStart, proj.lineEnd))
                 {
-                    game.player.lives--;
-                    return true; // remove projectile
+                    game.player.TakeDamage();
+                    return true;
                 }
 
-                // Check collision with walls
+                // Walls
                 auto wallIt = std::find_if(game.Walls.begin(), game.Walls.end(),
-                    [&](Wall& w) { return CheckCollisionCircleLine(w.position, w.radius, proj.lineStart, proj.lineEnd); });
+                    [&](Wall& w) { return CheckCollisionCircleLine(w.GetPosition(), w.GetRadius(), proj.lineStart, proj.lineEnd); });
 
                 if (wallIt != game.Walls.end())
                 {
-                    wallIt->health--;
-                    if (wallIt->health <= 0) game.Walls.erase(wallIt);
-                    return true; // remove projectile
+                    wallIt->TakeDamage();
+                    if (wallIt->IsDestroyed()) game.Walls.erase(wallIt);
+                    return true;
                 }
 
-                return false; // keep projectile
+                return false;
             }
 
-            return false; // unknown projectile type, keep
-    });
+            return false;
+        });
 }

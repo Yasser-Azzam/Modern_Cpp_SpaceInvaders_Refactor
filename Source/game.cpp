@@ -494,6 +494,27 @@ void Player::Render(Texture2D texture) const
 		WHITE);
 }
 
+void Player::TakeDamage(int amount)
+{
+	lives -= amount;
+	if (lives < 0) lives = 0;
+}
+
+Vector2 Player::GetPosition() const
+{
+	return { x_pos, GetScreenHeight() - player_base_height };
+}
+
+float Player::GetRadius() const
+{
+	return radius;
+}
+
+int Player::GetLives() const
+{
+	return lives;
+}
+
 
 void Projectile::Update()
 {
@@ -561,6 +582,28 @@ void Wall::Update()
 
 }
 
+void Wall::TakeDamage(int amount)
+{
+	health -= amount;
+	if (health < 0) health = 0;
+	active = health > 0;
+}
+
+bool Wall::IsDestroyed() const
+{
+	return !active;
+}
+
+Vector2 Wall::GetPosition() const
+{
+	return position;
+}
+
+float Wall::GetRadius() const
+{
+	return radius;
+}
+
 void Alien::Update() 
 {
 	int window_width = GetScreenWidth(); 
@@ -609,6 +652,15 @@ void Alien::Render(Texture2D texture) const
 		WHITE);
 }
 
+Vector2 Alien::GetPosition() const
+{
+	return position;
+}
+
+float Alien::GetRadius() const
+{
+	return radius;
+}
 
 //BACKGROUND
 void Star::Update(float starOffset)
