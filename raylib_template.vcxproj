@@ -169,11 +169,18 @@
     <ClCompile Include="Source\Resources.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Source\Background_System.h" />
+    <ClInclude Include="Source\Alien_System.h" />
     <ClInclude Include="Source\Collision_System.h" />
+    <ClInclude Include="Source\Input_System.h" />
+    <ClInclude Include="Source\Player_System.h" />
+    <ClInclude Include="Source\Projectile_System.h" />
     <ClInclude Include="Source\RAII_Texture_Wrapper.h" />
     <ClInclude Include="Source\game.h" />
     <ClInclude Include="Source\Resources.h" />
     <ClInclude Include="Source\System_RAII_Guards.h" />
+    <ClInclude Include="Source\UI_System.h" />
+    <ClInclude Include="Source\Wall_System.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

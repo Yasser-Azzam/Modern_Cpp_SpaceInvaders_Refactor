@@ -3,6 +3,7 @@
 #include <vector>
 #include "Resources.h"
 #include <string>
+#include "Background_System.h"
 
 
 enum struct State
@@ -22,8 +23,8 @@ enum struct EntityType
 
 struct PlayerData
 {
-	std::string name;
-	int score;
+	std::string name{};
+	int score{};
 };
 
 struct Player
@@ -47,10 +48,6 @@ public:
 	Vector2 GetPosition() const;
 	float GetRadius() const;
 	int GetLives() const;
-
-	void Update();
-	void Render(Texture2D texture) const;
-
 };
 
 
@@ -67,9 +64,6 @@ public:
 	Vector2 lineEnd{};
 
 	bool isAlive() const { return alive; }
-
-	void Update();
-	void Render(Texture2D texture) const;
 };
 
 struct Wall 
@@ -87,9 +81,6 @@ public:
 	bool IsDestroyed() const;
 	Vector2 GetPosition() const;
 	float GetRadius() const;
-
-	void Update();
-	void Render(Texture2D texture) const;
 };
 
 struct Alien
@@ -109,9 +100,6 @@ public:
 
 	Vector2 GetPosition() const;
 	float GetRadius() const;
-
-	void Update();
-	void Render(Texture2D texture) const;
 };
 
 
@@ -132,8 +120,6 @@ struct Background
 public:
 	std::vector<Star> Stars;
 
-	explicit Background(int starAmount); // replaces Initialize()
-
 	void Update(float offset);
 	void Render() const;
 };
@@ -141,10 +127,6 @@ public:
 struct Game
 {
 public:
-	// NOTE:
-	// Game still has too many responsibilities.
-	// This is intentional for now — will be addressed in later steps.
-
 	State gameState;
 
 	int score = 0;
@@ -175,7 +157,7 @@ public:
 		{"Player 5", 100}
 	};
 
-	Background background;
+	std::vector<Star> stars;
 
 	Vector2 playerPos{};
 	Vector2 cornerPos{};
@@ -200,14 +182,8 @@ public:
 
 	void SpawnAliens();
 	void SpawnWalls();
-
-	void HandleCollisions();
-
-	void HandleInput();
-	void EndScreenInput();
-
-	void SpawnPlayerProjectile();
 	void SpawnEnemyProjectile();
+	void SpawnPlayerProjectile();
 
 	void UpdateBackground();
 
@@ -215,20 +191,9 @@ public:
 	void RenderGameplay() const;
 	void RenderEndScreen() const;
 
-	void RenderHUD() const;
-	void RenderPlayer() const;
-	Texture2D GetPlayerTexture() const;
-	void RenderProjectiles() const;
-	void RenderWalls() const;
-	void RenderAliens() const;
-
-	void RenderHighScoreEntry() const;
-	void RenderLeaderboard() const;
-
 	bool CheckNewHighScore();
 	void InsertNewHighScore(std::string name);
 
 	void LoadLeaderboard();
 	void SaveLeaderboard();
-
 };

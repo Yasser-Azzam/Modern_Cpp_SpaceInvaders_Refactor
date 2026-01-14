@@ -5,6 +5,13 @@
 #include <thread>
 #include <fstream>
 #include "Collision_System.h"
+#include "Player_System.h"
+#include "Alien_System.h"
+#include "Wall_System.h"
+#include "Projectile_System.h"
+#include "UI_System.h"
+#include "Input_System.h"
+
 
 // MATH FUNCTIONS
 float lineLength(Vector2 A, Vector2 B) //Uses pythagoras to calculate the length of a line
@@ -34,12 +41,13 @@ bool pointInCircle(Vector2 circlePos, float radius, Vector2 point) // Uses pytha
 Game::Game(State initialState)
 	: gameState(initialState)
 	, score(0)
-	, background(600) // ✅ constructed here
 {
 	float window_width = static_cast<float>(GetScreenWidth());
 	float window_height = static_cast<float>(GetScreenHeight());
 
 	float wall_distance = window_width / (wallCount + 1);
+
+	BackgroundSystem::Initialize(stars, 600);
 
 	SpawnWalls();
 
@@ -78,7 +86,7 @@ void Game::Reset(State initialState)
 	SpawnWalls();
 	Aliens.clear();
 	newHighScore = false;
-	background = Background(600);
+	BackgroundSystem::Initialize(stars, 600);
 	SpawnAliens();
 
 	// reset UI
@@ -92,32 +100,22 @@ void Game::Reset(State initialState)
 // Extract responsibilities into smaller functions or systems and reduce nesting by using algorithms if possible.
 void Game::Update()
 {
-	HandleInput();
+	InputSystem::HandleGameInput(*this);
 
 	if (gameState != State::GAMEPLAY) return;
 
-	player.Update();
+	PlayerSystem::Update(player);
+	AlienSystem::Update(Aliens);
+	WallSystem::Update(Walls);
+	ProjectileSystem::Update(Projectiles);
 
-	for (auto& alien : Aliens) {
-		alien.Update();
-		if (alien.position.y > GetScreenHeight() - player.player_base_height)
-			End();
-	}
-
-	for (auto& proj : Projectiles) proj.Update();
-	for (auto& wall : Walls) wall.Update();
-
-	HandleCollisions();
-
+	CollisionSystem::HandleProjectileCollisions(*this);
 	UpdateBackground();
 
-	if (Aliens.empty())
-		SpawnAliens();
-
+	if (Aliens.empty()) SpawnAliens();
 	SpawnEnemyProjectile();
 
-	if (player.lives < 1)
-		End();
+	if (player.lives < 1) End();
 }
 
 
@@ -215,82 +213,6 @@ void Game::SaveLeaderboard()
 
 }
 
-void Game::HandleCollisions()
-{
-	CollisionSystem::HandleProjectileCollisions(*this);
-}
-
-
-void Game::HandleInput()
-{
-	if (gameState == State::GAMEPLAY)
-	{
-		// Player shooting
-		if (IsKeyPressed(KEY_SPACE))
-			SpawnPlayerProjectile();
-
-		// Quit
-		if (IsKeyReleased(KEY_Q))
-			End();
-	}
-	else if (gameState == State::STARTSCREEN)
-	{
-		if (IsKeyReleased(KEY_SPACE))
-			Reset(State::GAMEPLAY);
-	}
-	else if (gameState == State::ENDSCREEN)
-	{
-		EndScreenInput();
-	}
-}
-
-void Game::EndScreenInput()
-{
-	if (!newHighScore)
-	{
-		if (IsKeyReleased(KEY_ENTER))
-			Continue();
-		return;
-	}
-
-	// Mouse hover detection
-	mouseOnText = CheckCollisionPointRec(GetMousePosition(), textBox);
-	SetMouseCursor(mouseOnText ? MOUSE_CURSOR_IBEAM : MOUSE_CURSOR_DEFAULT);
-
-	if (mouseOnText)
-	{
-		int key = GetCharPressed();
-		while (key > 0)
-		{
-			if (playerName.size() < maxNameLength && key >= 32 && key <= 125)
-			{
-				playerName.push_back(static_cast<char>(key));
-			}
-			key = GetCharPressed();
-		}
-
-		// Backspace
-		if (IsKeyPressed(KEY_BACKSPACE) && !playerName.empty())
-		{
-			playerName.pop_back();
-		}
-
-		framesCounter++;
-	}
-	else
-	{
-		framesCounter = 0;
-	}
-
-	// Confirm input
-	if (!playerName.empty() && IsKeyReleased(KEY_ENTER))
-	{
-		InsertNewHighScore(playerName);
-		newHighScore = false;
-		playerName.clear();
-	}
-}
-
 void Game::SpawnPlayerProjectile()
 {
 	float window_height = static_cast<float>(GetScreenHeight());
@@ -325,7 +247,7 @@ void Game::UpdateBackground()
 	playerPos = { player.x_pos, (float)player.player_base_height };
 	cornerPos = { 0, (float)player.player_base_height };
 	offset = lineLength(playerPos, cornerPos) * -1;
-	background.Update(offset / 15);
+	BackgroundSystem::Update(stars, offset / 15.0f);
 }
 
 void Game::RenderStartScreen() const
@@ -338,187 +260,28 @@ void Game::RenderStartScreen() const
 
 void Game::RenderGameplay() const
 {
-	background.Render();
+	BackgroundSystem::Render(stars);
 
-	RenderHUD();
-	RenderPlayer();
-	RenderProjectiles();
-	RenderWalls();
-	RenderAliens();
+	PlayerSystem::Render(player, resources);
+	AlienSystem::Render(Aliens, resources);
+	WallSystem::Render(Walls, resources);
+	ProjectileSystem::Render(Projectiles, resources);
+	UISystem::RenderHUD(*this);
 }
 
 void Game::RenderEndScreen() const
 {
 	if (newHighScore)
-		RenderHighScoreEntry();
+		UISystem::RenderHighScoreEntry(*this);
 	else
-		RenderLeaderboard();
+		UISystem::RenderLeaderboard(*this);
 }
 
-void Game::RenderHUD() const
-{
-	DrawText(TextFormat("Score: %i", score), 50, 20, 40, YELLOW);
-	DrawText(TextFormat("Lives: %i", player.lives), 50, 70, 40, YELLOW);
-}
 
-void Game::RenderPlayer() const
-{
-	player.Render(GetPlayerTexture());
-}
-
-Texture2D Game::GetPlayerTexture() const
-{
-	return  resources.shipTextures[player.activeTexture].get();
-}
-
-void Game::RenderProjectiles() const
-{
-	for (const auto& proj : Projectiles)
-		proj.Render(resources.laserTexture.get());
-}
-
-void Game::RenderWalls() const
-{
-	for (const auto& wall : Walls)
-		wall.Render(resources.barrierTexture.get());
-}
-
-void Game::RenderAliens() const
-{
-	for (const auto& alien : Aliens)
-		alien.Render(resources.alienTexture.get());
-}
-
-void Game::RenderHighScoreEntry() const
-{
-	DrawText("NEW HIGHSCORE!", 600, 300, 60, YELLOW);
-
-	// BELOW CODE IS FOR NAME INPUT RENDER
-	DrawText("PLACE MOUSE OVER INPUT BOX!", 600, 400, 20, YELLOW);
-
-	DrawRectangleRec(textBox, LIGHTGRAY);
-	if (mouseOnText)
-	{
-		// HOVER CONFIRMIATION
-		DrawRectangleLines((int)textBox.x, (int)textBox.y, (int)textBox.width, (int)textBox.height, RED);
-	}
-	else
-	{
-		DrawRectangleLines((int)textBox.x, (int)textBox.y, (int)textBox.width, (int)textBox.height, DARKGRAY);
-	}
-
-	//Draw the name being typed out
-	DrawText(playerName.c_str(), (int)textBox.x + 5, (int)textBox.y + 8, 40, MAROON);
-
-	//Draw the text explaining how many characters are used
-	DrawText(TextFormat("INPUT CHARS: %i/%i", playerName.size(), 8), 600, 600, 20, YELLOW);
-
-	if (mouseOnText)
-	{
-		if (playerName.size() < 9)
-		{
-			// Draw blinking underscore char
-			if (((framesCounter / 20) % 2) == 0)
-			{
-				DrawText("_", (int)textBox.x + 8 + MeasureText(playerName.c_str(), 40), (int)textBox.y + 12, 40, MAROON);
-			}
-
-		}
-		else
-		{
-			//Name needs to be shorter
-			DrawText("Press BACKSPACE to delete chars...", 600, 650, 20, YELLOW);
-		}
-
-	}
-
-	// Explain how to continue when name is input
-	if (playerName.size() > 0 && playerName.size() < 9)
-	{
-		DrawText("PRESS ENTER TO CONTINUE", 600, 800, 40, YELLOW);
-	}
-}
-
-void Game::RenderLeaderboard() const
-{
-	DrawText("PRESS ENTER TO CONTINUE", 600, 200, 40, YELLOW);
-	DrawText("LEADERBOARD", 50, 100, 40, YELLOW);
-
-	for (int i = 0; i < Leaderboard.size(); i++)
-	{
-		const char* tempNameDisplay = Leaderboard[i].name.c_str();
-		DrawText(tempNameDisplay, 50, 140 + (i * 40), 40, YELLOW);
-		DrawText(TextFormat("%i", Leaderboard[i].score),
-			350, 140 + (i * 40), 40, YELLOW);
-	}
-}
 
 Player::Player()
 {
 	x_pos = static_cast<float>(GetScreenWidth()) / 2.0f;
-}
-
-void Player::Update() 
-{
-
-	//Movement
-	direction = 0;
-	if (IsKeyDown(KEY_LEFT))
-	{
-		direction--;
-	}
-	if (IsKeyDown(KEY_RIGHT))
-	{
-		direction++;
-	}
-
-	x_pos += speed * direction;
-
-	if (x_pos < 0 + radius)
-	{
-		x_pos = 0 + radius;
-	}
-	else if (x_pos > GetScreenWidth() - radius)
-	{
-		x_pos = GetScreenWidth() - radius;
-	}
-
-
-	//Determine frame for animation
-	timer += GetFrameTime();
-
-	if (timer > 0.4 && activeTexture == 2)
-	{
-		activeTexture = 0;
-		timer = 0;
-	}
-	else if (timer > 0.4)
-	{
-		activeTexture++;
-		timer = 0;
-	}
-
-	
-}
-
-void Player::Render(Texture2D texture) const
-{
-	float window_height = GetScreenHeight(); 
-
-	DrawTexturePro(texture,
-		{
-			0,
-			0,
-			352,
-			352,
-		},
-		{
-			x_pos, window_height - player_base_height,
-			100,
-			100,
-		}, { 50, 50 },
-		0,
-		WHITE);
 }
 
 void Player::TakeDamage(int amount)
@@ -540,73 +303,6 @@ float Player::GetRadius() const
 int Player::GetLives() const
 {
 	return lives;
-}
-
-
-void Projectile::Update()
-{
-	position.y -= speed;
-
-	// UPDATE LINE POSITION
-	lineStart.y = position.y - 15;
-	lineEnd.y   = position.y + 15;
-
-	lineStart.x = position.x;
-	lineEnd.x   = position.x;
-}
-
-void Projectile::Render(Texture2D texture) const
-{
-	DrawTexturePro(texture,
-		{
-			0,
-			0,
-			176,
-			176,
-		},
-		{
-			position.x,
-			position.y,
-			50,
-			50,
-		}, { 25 , 25 },
-		0,
-		WHITE);
-}
-
-void Wall::Render(Texture2D texture) const
-{
-	DrawTexturePro(texture,
-		{
-			0,
-			0,
-			704,
-			704,
-		},
-		{
-			position.x,
-			position.y,
-			200,
-			200,
-		}, { 100 , 100 },
-		0,
-		WHITE);
-
-
-	DrawText(TextFormat("%i", health), position.x-21, position.y+10, 40, RED);
-	
-}
-
-void Wall::Update() 
-{
-
-	// set walls as inactive when out of health
-	if (health < 1)
-	{
-		active = false;
-	}
-
-
 }
 
 void Wall::TakeDamage(int amount)
@@ -631,54 +327,6 @@ float Wall::GetRadius() const
 	return radius;
 }
 
-void Alien::Update() 
-{
-	int window_width = GetScreenWidth(); 
-
-	if (moveRight)
-	{
-		position.x += speed; 
-
-		if (position.x >= GetScreenWidth())
-		{
-			moveRight = false; 
-			position.y += 50; 
-		}
-	}
-	else 
-	{
-		position.x -= speed; 
-
-		if (position.x <= 0)
-		{
-			moveRight = true; 
-			position.y += 50; 
-		}
-	}
-}
-
-void Alien::Render(Texture2D texture) const
-{
-
-	
-
-	DrawTexturePro(texture,
-		{
-			0,
-			0,
-			352,
-			352,
-		},
-		{
-			position.x,
-			position.y,
-			100,
-			100,
-		}, {50 , 50},
-		0,
-		WHITE);
-}
-
 Vector2 Alien::GetPosition() const
 {
 	return position;
@@ -687,51 +335,4 @@ Vector2 Alien::GetPosition() const
 float Alien::GetRadius() const
 {
 	return radius;
-}
-
-//BACKGROUND
-void Star::Update(float starOffset)
-{
-	position.x = initPosition.x + starOffset;
-	position.y = initPosition.y;
-
-}
-
-void Star::Render() const
-{
-	DrawCircle((int)position.x, (int)position.y, size, color);
-}
-
-
-Background::Background(int starAmount)
-{
-	Stars.reserve(starAmount);
-
-	for (int i = 0; i < starAmount; i++)
-	{
-		Star newStar;
-		newStar.initPosition.x = GetRandomValue(-150, GetScreenWidth() + 150);
-		newStar.initPosition.y = GetRandomValue(0, GetScreenHeight());
-		newStar.color = SKYBLUE;
-		newStar.size = GetRandomValue(1, 4) / 2.0f;
-
-		Stars.push_back(newStar);
-	}
-}
-
-void Background::Update(float offset)
-{
-	for (int i = 0; i < Stars.size(); i++)
-	{
-		Stars[i].Update(offset);
-	}
-	
-}
-
-void Background::Render() const
-{
-	for (int i = 0; i < Stars.size(); i++)
-	{
-		Stars[i].Render();
-	}
 }
