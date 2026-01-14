@@ -186,12 +186,7 @@ public:
 
 	void SpawnAliens();
 
-	bool CheckCollision(Vector2 circlePos, float circleRadius,
-		Vector2 lineStart, Vector2 lineEnd);
-
 	void HandleCollisions();
-	void HandlePlayerProjectiles();
-	void HandleEnemyProjectiles();
 
 	void HandleInput();
 	void EndScreenInput();
