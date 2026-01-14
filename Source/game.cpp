@@ -11,31 +11,7 @@
 #include "Projectile_System.h"
 #include "UI_System.h"
 #include "Input_System.h"
-
-
-// MATH FUNCTIONS
-float lineLength(Vector2 A, Vector2 B) //Uses pythagoras to calculate the length of a line
-{
-	float length = sqrtf(pow(B.x - A.x, 2) + pow(B.y - A.y, 2));
-
-	return length;
-}
-
-bool pointInCircle(Vector2 circlePos, float radius, Vector2 point) // Uses pythagoras to calculate if a point is within a circle or not
-{
-	float distanceToCentre = lineLength(circlePos, point);
-
-	if (distanceToCentre < radius)
-	{
-		return true;
-	}
-	else
-	{
-		return false;
-	}
-}
-//TODO:^^those two functions are free functions used for collision detection,
-//I dont see any issues with them but I should keep an eye on them just in case
+#include "Math_Utilities.h"
 
 
 Game::Game(State initialState)
@@ -56,10 +32,6 @@ Game::Game(State initialState)
 	SpawnAliens();
 }
 
-//I see no issue here, with the "end", "continue" and "launch" functions.
-// they seem to have been made a for a single and they only do that
-//in the case of "End()" you could argue its doing multiple things(clear the screen, check if the score is a new high score and change game state)
-//but I can't think of a better way that I would find more readable/optimal(for now at least) 
 void Game::End()
 {
 	//SAVE SCORE AND UPDATE SCOREBOARD
@@ -246,7 +218,7 @@ void Game::UpdateBackground()
 {
 	playerPos = { player.x_pos, (float)player.player_base_height };
 	cornerPos = { 0, (float)player.player_base_height };
-	offset = lineLength(playerPos, cornerPos) * -1;
+	offset = MathUtilities::Distance(playerPos, cornerPos) * -1;
 	BackgroundSystem::Update(stars, offset / 15.0f);
 }
 

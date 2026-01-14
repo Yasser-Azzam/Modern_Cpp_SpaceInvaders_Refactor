@@ -173,6 +173,7 @@
     <ClInclude Include="Source\Alien_System.h" />
     <ClInclude Include="Source\Collision_System.h" />
     <ClInclude Include="Source\Input_System.h" />
+    <ClInclude Include="Source\Math_Utilities.h" />
     <ClInclude Include="Source\Player_System.h" />
     <ClInclude Include="Source\Projectile_System.h" />
     <ClInclude Include="Source\RAII_Texture_Wrapper.h" />
