@@ -171,7 +171,9 @@
   <ItemGroup>
     <ClInclude Include="Source\Background_System.h" />
     <ClInclude Include="Source\Alien_System.h" />
+    <ClInclude Include="Source\Collision_Context.h" />
     <ClInclude Include="Source\Collision_System.h" />
+    <ClInclude Include="Source\GameConfig.h" />
     <ClInclude Include="Source\Input_System.h" />
     <ClInclude Include="Source\Math_Utilities.h" />
     <ClInclude Include="Source\Player_System.h" />

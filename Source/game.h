@@ -4,7 +4,7 @@
 #include "Resources.h"
 #include <string>
 #include "Background_System.h"
-
+#include "GameConfig.h"
 
 enum struct State
 {
@@ -113,14 +113,13 @@ struct Game
 public:
 	State gameState;
 
+	GameConfig config{};
+
 	int score = 0;
 	int wallCount = 5;
 
 	float shootTimer = 0.0f;
 
-	int formationWidth = 8;
-	int formationHeight = 5;
-	int alienSpacing = 80;
 	int formationX = 100;
 	int formationY = 50;
 
@@ -147,15 +146,13 @@ public:
 	Vector2 cornerPos{};
 	float offset = 0.0f;
 
-	// UI input (still legacy — will refactor later)
 	std::string playerName;
-	const size_t maxNameLength = 8;
 
 	Rectangle textBox{ 600, 500, 225, 50 };
 	bool mouseOnText = false;
 	int framesCounter = 0;
 
-	explicit Game(State initialState); // replaces Start()
+	explicit Game(State initialState);
 
 	void Update();
 	void Render();
@@ -169,6 +166,7 @@ public:
 	void ResetWorld();
 	void ResetBackground();
 	void ResetUI();
+	void CleanupWorld();
 
 	void SpawnAliens();
 	void SpawnWalls();

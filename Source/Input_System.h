@@ -53,7 +53,7 @@ private:
             while (key > 0)
             {
                 if (key >= 32 && key <= 125 &&
-                    game.playerName.size() < game.maxNameLength)
+                    game.playerName.size() < game.config.maxPlayerNameLength)
                 {
                     game.playerName.push_back(static_cast<char>(key));
                 }
@@ -74,7 +74,7 @@ private:
         }
 
         if (!game.playerName.empty() &&
-            game.playerName.size() <= game.maxNameLength &&
+            game.playerName.size() <= game.config.maxPlayerNameLength &&
             IsKeyReleased(KEY_ENTER))
         {
             game.InsertNewHighScore(game.playerName);

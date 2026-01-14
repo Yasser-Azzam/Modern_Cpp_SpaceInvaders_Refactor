@@ -23,7 +23,7 @@ Game::Game(State initialState)
 
 	float wall_distance = window_width / (wallCount + 1);
 
-	BackgroundSystem::Initialize(stars, 600);
+	BackgroundSystem::Initialize(stars, config.starCount);
 
 	SpawnWalls();
 
@@ -34,10 +34,7 @@ Game::Game(State initialState)
 
 void Game::End()
 {
-	//SAVE SCORE AND UPDATE SCOREBOARD
-	Projectiles.clear();
-	Walls.clear();
-	Aliens.clear();
+	CleanupWorld();
 	newHighScore = CheckNewHighScore();
 	gameState = State::ENDSCREEN;
 }
@@ -90,6 +87,13 @@ void Game::ResetUI()
 	framesCounter = 0;
 }
 
+void Game::CleanupWorld()
+{
+	Projectiles.clear();
+	Walls.clear();
+	Aliens.clear();
+}
+
 void Game::Update()
 {
 	InputSystem::HandleGameInput(*this);
@@ -101,7 +105,16 @@ void Game::Update()
 	WallSystem::Update(Walls);
 	ProjectileSystem::Update(Projectiles);
 
-	CollisionSystem::HandleProjectileCollisions(*this);
+	CollisionContext ctx{
+		player,
+		Aliens,
+		Walls,
+		Projectiles,
+		score
+	};
+
+	CollisionSystem::HandleProjectileCollisions(ctx);
+
 	UpdateBackground();
 
 	if (Aliens.empty()) SpawnAliens();
@@ -134,11 +147,13 @@ void Game::Render()
 
 void Game::SpawnAliens()
 {
-	for (int row = 0; row < formationHeight; row++) {
-		for (int col = 0; col < formationWidth; col++) {
+	for (int row = 0; row < config.alienFormationHeight; row++)
+	{
+		for (int col = 0; col < config.alienFormationWidth; col++) 
+		{
 			Alien newAlien = Alien();
-			newAlien.position.x = formationX + 450 + (col * alienSpacing);
-			newAlien.position.y = formationY + (row * alienSpacing);
+			newAlien.position.x = formationX + 450 + (col * config.alienSpacing);
+			newAlien.position.y = formationY + (row * config.alienSpacing);
 			Aliens.push_back(newAlien);
 			std::cout << "Find Alien -X:" << newAlien.position.x << std::endl;
 			std::cout << "Find Alien -Y:" << newAlien.position.y << std::endl;
@@ -239,7 +254,7 @@ void Game::UpdateBackground()
 	playerPos = { player.x_pos, (float)player.player_base_height };
 	cornerPos = { 0, (float)player.player_base_height };
 	offset = MathUtilities::Distance(playerPos, cornerPos) * -1;
-	BackgroundSystem::Update(stars, offset / 15.0f);
+	BackgroundSystem::Update(stars, offset / config.backgroundScrollDivisor);
 }
 
 void Game::RenderStartScreen() const
