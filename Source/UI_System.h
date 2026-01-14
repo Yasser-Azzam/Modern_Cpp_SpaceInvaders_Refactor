@@ -50,10 +50,14 @@ struct UISystem
         DrawText("PRESS ENTER TO CONTINUE", cfg.hudScoreX + 550, cfg.hudScoreY + 180, cfg.hudFontSize, cfg.hudColor);
         DrawText("LEADERBOARD", cfg.leaderboardTitleX, cfg.leaderboardTitleY, cfg.leaderboardFontSize, cfg.leaderboardColor);
 
-        for (int i = 0; i < game.Leaderboard.size(); i++)
+        int row = 0;
+
+        for (const auto& entry : game.Leaderboard)
         {
-            DrawText(game.Leaderboard[i].name.c_str(), cfg.leaderboardTitleX, cfg.leaderboardStartY + (i * cfg.leaderboardRowSpacing), cfg.leaderboardFontSize, cfg.leaderboardColor);
-            DrawText(TextFormat("%i", game.Leaderboard[i].score), cfg.leaderboardTitleX + 300, cfg.leaderboardStartY + (i * cfg.leaderboardRowSpacing), cfg.leaderboardFontSize, cfg.leaderboardColor);
+            DrawText(entry.name.c_str(), cfg.leaderboardTitleX, cfg.leaderboardStartY + (row * cfg.leaderboardRowSpacing), cfg.leaderboardFontSize, cfg.leaderboardColor);
+            DrawText(TextFormat("%i", entry.score), cfg.leaderboardTitleX + 300, cfg.leaderboardStartY + (row * cfg.leaderboardRowSpacing), cfg.leaderboardFontSize, cfg.leaderboardColor);
+
+            ++row;
         }
     }
 

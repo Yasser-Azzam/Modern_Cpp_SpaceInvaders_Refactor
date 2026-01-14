@@ -4,6 +4,7 @@
 #include <chrono>
 #include <thread>
 #include <fstream>
+#include <random>
 #include "Collision_System.h"
 #include "Player_System.h"
 #include "Alien_System.h"
@@ -187,18 +188,13 @@ void Game::InsertNewHighScore(std::string name)
 	newData.name = name;
 	newData.score = score;
 
-	for (int i = 0; i < Leaderboard.size(); i++)
+	auto it = std::find_if(Leaderboard.begin(), Leaderboard.end(),
+		[&](const PlayerData& p) { return score > p.score; });
+
+	if (it != Leaderboard.end())
 	{
-		if (newData.score > Leaderboard[i].score)
-		{
-
-			Leaderboard.insert(Leaderboard.begin() + i, newData);
-
-			Leaderboard.pop_back();
-
-			i = static_cast<int>(Leaderboard.size());
-
-		}
+		Leaderboard.insert(it, newData);
+		Leaderboard.pop_back();
 	}
 }
 
@@ -221,7 +217,10 @@ void Game::SpawnEnemyProjectile()
 	}
 	shootTimer = 0;
 
-	const int index = Aliens.size() > 1 ? rand() % Aliens.size() : 0;
+	static std::mt19937 rng{ std::random_device{}() };
+
+	std::uniform_int_distribution<std::size_t> dist(0, Aliens.size() - 1);
+	const auto index = dist(rng);
 
 	Projectile newProjectile;
 	newProjectile.position = Aliens[index].position;
